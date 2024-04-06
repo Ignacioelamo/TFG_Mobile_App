@@ -1,8 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:tfg_mobile_app/fileManager.dart';
+
 import 'appConfig.dart';
+import 'controller.dart';
 
 
 class MyApp extends StatelessWidget {
@@ -32,7 +33,7 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
-              await FileManager.instance.openFile(AppConfig.gpsDataFileName);
+              await Contraller.instance.openFile(AppConfig.gpsDataFileName);
             },
             child: const Text('Open File'),
           ),
@@ -66,7 +67,7 @@ class MyApp extends StatelessWidget {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await FileManager.instance.clearFile(AppConfig.gpsDataFileName);
+                await Contraller.instance.clearFile(AppConfig.gpsDataFileName);
               },
             ),
           ],
