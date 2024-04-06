@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'fileManager.dart';
 import 'appConfig.dart';
 import 'package:gps_connectivity/gps_connectivity.dart';
@@ -10,9 +12,10 @@ class SubscriptionManager{
 
   //Global variables
   String? _lastGpsDate;
+  String? _lastGpsData;
 
   // All the subscriptions that the app has
-  StreamSubscription<bool>? _gpsSubscription;
+  StreamSubscription<bool>? gpsSubscription;
 
   // Foreach subscription, the key is the subscription name and the value is the subscription status
   Map<String, bool> subscriptions = {};
@@ -38,11 +41,11 @@ class SubscriptionManager{
 
   void subscribeToGpsChanges(){
     try{
-      if (_gpsSubscription == null){
-        _gpsSubscription = GpsConnectivity().onGpsConnectivityChanged.listen((bool result) async{
+      if (gpsSubscription == null){
+        gpsSubscription = GpsConnectivity().onGpsConnectivityChanged.listen((bool result) async{
           await saveGpsData(AppConfig.gpsDataFileName);
         });
-        updateSubscription('gps', _gpsSubscription != null);
+        updateSubscription('gps', gpsSubscription != null);
       }
     }catch(e){
       FileManager.instance.writeToFile(AppConfig.logFileName, e.toString());
@@ -53,12 +56,16 @@ class SubscriptionManager{
     String gpsData = await GpsConnectivity().checkGpsConnectivity() ? 'GPS_connected' : 'GPS_disconnected';
 
     DateTime now = DateTime.now();
-    String date = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
+    String date = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}-${now.millisecond}';
     String gpsInfo = 'Date: $date:$gpsData\n';
 
-    if (_lastGpsDate != date || _lastGpsDate == null){
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? serialNumber = prefs.getString('serialNumber');
+    if (_lastGpsDate != date && _lastGpsData != gpsData || _lastGpsDate == null){
       _lastGpsDate = date;
+      _lastGpsData = gpsData;
       await FileManager.instance.saveFile(fileName, gpsInfo);
+      await FileManager.instance.saveFile(fileName, 'id: $serialNumber\n');
     }else{
       return;
     }

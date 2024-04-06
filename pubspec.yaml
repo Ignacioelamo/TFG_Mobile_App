@@ -43,6 +43,8 @@ dependencies:
   gps_connectivity: ^0.0.4
   open_file: ^3.3.2
   shared_preferences: ^2.2.2
+  device_info_plus: ^10.0.1
+  crypto: ^3.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

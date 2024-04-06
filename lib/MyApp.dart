@@ -33,16 +33,6 @@ class MyApp extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () async {
               await FileManager.instance.openFile(AppConfig.gpsDataFileName);
-
-              /*bool fileExists = await FileManager.instance.fileExists('gps_data.txt');
-              if (fileExists) {
-                print("El archivo ya existe");
-                await FileManager.instance.openFile(AppConfig.gpsDataFileName);
-              } else {
-                print("El archivo no existe");
-                await FileManager.instance.createFile(AppConfig.gpsDataFileName);
-                await FileManager.instance.openFile(AppConfig.gpsDataFileName);
-              }*/
             },
             child: const Text('Open File'),
           ),
@@ -76,7 +66,7 @@ class MyApp extends StatelessWidget {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await FileManager.instance.deleteFile(AppConfig.gpsDataFileName);
+                await FileManager.instance.clearFile(AppConfig.gpsDataFileName);
               },
             ),
           ],
