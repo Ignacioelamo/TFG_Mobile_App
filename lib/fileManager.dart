@@ -35,7 +35,6 @@ class FileManager{
 
   Future<void> saveFile(String fileName, String content) async {
     await writeToFile(fileName, content);
-    await openFile(fileName);
   }
 
 
@@ -47,6 +46,7 @@ class FileManager{
 
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
+    print('Creating file: $filePath');
     await file.create();
   }
 
@@ -56,17 +56,29 @@ class FileManager{
     await file.delete();
   }
 
+  Future<void> deleteFiles() async {
+    Directory appDocDir = await getApplicationDocumentsDirectory();
+    await appDocDir.delete(recursive: true);
+  }
+
   Future<void> clearFile(String fileName) async {
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     await file.writeAsString('');
   }
 
+  // Clear all files in the app directory
   Future<void> clearFiles() async {
     Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-    await appDocDir.delete(recursive: true);
+    List<FileSystemEntity> files = appDocDir.listSync();
+    for (FileSystemEntity file in files) {
+      if (file is File) {
+        await file.writeAsString('');
+      }
+    }
   }
+
+
 
   Future<bool> fileExists(String fileName) async {
     String filePath = await getFilePath(fileName);

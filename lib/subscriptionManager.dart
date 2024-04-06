@@ -8,6 +8,9 @@ class SubscriptionManager{
   SubscriptionManager._privateConstructor();
   static final SubscriptionManager instance = SubscriptionManager._privateConstructor();
 
+  //Global variables
+  String? _lastGpsDate;
+
   // All the subscriptions that the app has
   StreamSubscription<bool>? _gpsSubscription;
 
@@ -33,7 +36,7 @@ class SubscriptionManager{
     subscriptions.clear();
   }
 
-  void subcribeToGpsChanges(){
+  void subscribeToGpsChanges(){
     try{
       if (_gpsSubscription == null){
         _gpsSubscription = GpsConnectivity().onGpsConnectivityChanged.listen((bool result) async{
@@ -53,7 +56,14 @@ class SubscriptionManager{
     String date = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}';
     String gpsInfo = 'Date: $date:$gpsData\n';
 
-    await FileManager.instance.saveFile(fileName, gpsInfo);
+    if (_lastGpsDate != date || _lastGpsDate == null){
+      _lastGpsDate = date;
+      await FileManager.instance.saveFile(fileName, gpsInfo);
+    }else{
+      return;
+    }
+
+
   }
 
 }

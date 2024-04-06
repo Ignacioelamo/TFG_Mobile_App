@@ -32,7 +32,9 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
-              bool fileExists = await FileManager.instance.fileExists('gps_data.txt');
+              await FileManager.instance.openFile(AppConfig.gpsDataFileName);
+
+              /*bool fileExists = await FileManager.instance.fileExists('gps_data.txt');
               if (fileExists) {
                 print("El archivo ya existe");
                 await FileManager.instance.openFile(AppConfig.gpsDataFileName);
@@ -40,7 +42,7 @@ class MyApp extends StatelessWidget {
                 print("El archivo no existe");
                 await FileManager.instance.createFile(AppConfig.gpsDataFileName);
                 await FileManager.instance.openFile(AppConfig.gpsDataFileName);
-              }
+              }*/
             },
             child: const Text('Open File'),
           ),

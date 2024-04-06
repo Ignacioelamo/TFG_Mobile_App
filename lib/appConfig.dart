@@ -1,6 +1,3 @@
-import 'dart:async';
-import 'dart:io';
-
 class AppConfig{
   static const String appName = 'TFG Mobile App';
   static const String appVersion = '1.0.0';
@@ -8,7 +5,4 @@ class AppConfig{
 
   static const String gpsDataFileName = 'gps_data.txt';
   static const String logFileName = 'log.txt';
-
-
-
 }
