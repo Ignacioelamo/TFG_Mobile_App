@@ -40,7 +40,7 @@ class FileManager{
 
 
   Future<void> createFile(String fileName) async {
-    if (await fileExists(fileName)) {
+    if (await _fileExists(fileName)) {
       return;
     }
 
@@ -80,7 +80,7 @@ class FileManager{
 
 
 
-  Future<bool> fileExists(String fileName) async {
+  Future<bool> _fileExists(String fileName) async {
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     return file.exists();

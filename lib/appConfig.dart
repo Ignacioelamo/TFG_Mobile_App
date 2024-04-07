@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatf
 import 'package:shared_preferences/shared_preferences.dart';
 
 
+
 class AppConfig{
 
   AppConfig._privateConstructor();

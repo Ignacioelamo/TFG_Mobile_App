@@ -1,15 +1,30 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'appConfig.dart';
 import 'controller.dart';
+import 'permissionManager.dart';
 
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
 
-class MyApp extends StatelessWidget {
-  final BuildContext context;
+  @override
+  _MyAppState createState() => _MyAppState();
+}
 
-  const MyApp({super.key, required this.context});
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissions(); // Solicita los permisos utilizando PermissionManager
+  }
+
+  Future<void> _requestPermissions() async {
+    bool granted = await Controller.instance.requestPermission();
+    if (!granted) {
+      _showPermissionDialog(context);
+    }
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +48,7 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
-              await Contraller.instance.openFile(AppConfig.gpsDataFileName);
+              await Controller.instance.openFile(AppConfig.gpsDataFileName);
             },
             child: const Text('Open File'),
           ),
@@ -67,7 +82,7 @@ class MyApp extends StatelessWidget {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await Contraller.instance.clearFile(AppConfig.gpsDataFileName);
+                await Controller.instance.clearFile(AppConfig.gpsDataFileName);
               },
             ),
           ],
@@ -75,4 +90,29 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+
+  void _showPermissionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('Permisos requeridos'),
+        content: Text('Por favor, concede los permisos para continuar.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _requestPermissions();
+            },
+            child: Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
+
+
+
+
