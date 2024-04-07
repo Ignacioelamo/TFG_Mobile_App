@@ -8,12 +8,13 @@ import 'package:tfg_mobile_app/MyApp.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:tfg_mobile_app/appPermissionManager.dart';
 
 
 import 'fileManager.dart';
 import 'appConfig.dart';
 import 'subscriptionManager.dart';
+import 'appPermissionManager.dart';
 
 //Global variables
 bool? _isFirstTime;
@@ -57,6 +58,7 @@ void onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
     await handleFirstTimeInitialization();
     SubscriptionManager.instance.subscribeToGpsChanges();
+    AppPermissionManager.instance.
   }
 }
 
