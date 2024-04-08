@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'appConfig.dart';
 import 'controller.dart';
-import 'permissionManager.dart';
+
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -96,15 +96,15 @@ class _MyAppState extends State<MyApp> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Permisos requeridos'),
-        content: Text('Por favor, concede los permisos para continuar.'),
+        title: const Text('Permisos requeridos'),
+        content: const Text('Por favor, concede los permisos para continuar.'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _requestPermissions();
             },
-            child: Text('OK'),
+            child: const Text('OK'),
           ),
         ],
       ),

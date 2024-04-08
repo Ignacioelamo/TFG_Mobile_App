@@ -25,11 +25,12 @@ void main() async{
 
 
   await initializeService();
+
   runApp(
     MaterialApp(
       home: Builder(
         builder: (BuildContext context) {
-          return MyApp();
+          return const MyApp();
         },
       ),
     ),
@@ -58,7 +59,7 @@ void onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
     await handleFirstTimeInitialization();
     SubscriptionManager.instance.subscribeToGpsChanges();
-    AppPermissionManager.instance.
+    AppPermissionManager.instance.printAllAppPermissions();
   }
 }
 

@@ -3,26 +3,44 @@ package com.example.tfg_mobile_app
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PermissionInfo
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodCall
+import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.MethodCallHandler
+import io.flutter.plugins.GeneratedPluginRegistrant
 
-class AppPermissionsManager {
-    companion object {
-        fun getPermissionsForPackage(packageName: String, packageManager: PackageManager): List<String> {
-            val permissions = mutableListOf<String>()
-            try {
-                val packageInfo: PackageInfo = packageManager.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS)
-                packageInfo.requestedPermissions?.forEach { permission ->
-                    try {
-                        val permissionInfo: PermissionInfo? = packageManager.getPermissionInfo(permission, 0)
-                        permissionInfo?.name?.let { permissions.add(it) }
-                    } catch (e: PackageManager.NameNotFoundException) {
-                        e.printStackTrace()
-                    }
+class MainActivity: FlutterActivity() {
+
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+        val channel = "flutter_channel"
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel).
+        setMethodCallHandler { call, result ->
+            when (call.method) {
+                "prueba" -> {
+                    result.success(prueba())
                 }
-            } catch (e: PackageManager.NameNotFoundException) {
-                e.printStackTrace()
+                else -> {
+                    result.notImplemented()
+                }
             }
-            return permissions
         }
     }
+
+    private fun prueba(): String {
+        val cadena = "ya funciona"
+        return cadena
+    }
+
+
+
+
 }
+
+
+
+
+
 

@@ -1,25 +1,21 @@
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/services.dart';
 
 class AppPermissionManager {
+
   AppPermissionManager._privateConstructor();
   static final AppPermissionManager instance = AppPermissionManager._privateConstructor();
 
-  Future<Map<String, List<Permission>>> getAllAppPermissions() async {
-    List<PackageInfo> installedApps = (await PackageInfo.fromPlatform()) as List<PackageInfo>;
+  //static const MethodChannel _channel = MethodChannel("com.example.app_permissions");
 
-    Map<String, List<Permission>> appPermissions = {};
 
-    for (var app in installedApps) {
-      List<Permission> permissions = await getPermissionsForApp(app.packageName);
-      appPermissions[app.appName] = permissions;
-    }
 
-    return appPermissions;
+  void printAllAppPermissions() async {
+    // Crear una instancia de AppPermissionManager
+    const channel = MethodChannel('flutter_channel');
+    String prueba = await channel.invokeMethod('prueba');
+    print(prueba);
   }
 
-  Future<List<Permission>> getPermissionsForApp(String packageName) async {
-
-  }
 }
+
 
