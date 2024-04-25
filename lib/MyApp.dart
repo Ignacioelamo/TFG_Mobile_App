@@ -16,6 +16,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _requestPermissions(); // Solicita los permisos utilizando PermissionManager
+    Controller.instance.generateIDDevice();
+    //Controller.instance.getAllAppsPermissions();
+    //Controller.instance.getAllAppsPermissionsGroup();
+    Controller.instance.getAllAppsPermissionsOfTheApps();
+    //Controller.instance.getPermissions();
+    //Controller.instance.requestAppsPermissions();
   }
 
   Future<void> _requestPermissions() async {

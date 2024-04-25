@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
+import 'package:flutter/services.dart';
 
 class FileManager{
 
@@ -84,5 +85,12 @@ class FileManager{
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     return file.exists();
+  }
+
+  Future<void> generateIDDevice() async {
+    createFile('idDevice.txt');
+    String id = await MethodChannel('flutter_channel').invokeMethod('getDeviceId');
+    saveFile('idDevice.txt', id);
+    print("El id del dispostivo es: $id");
   }
 }

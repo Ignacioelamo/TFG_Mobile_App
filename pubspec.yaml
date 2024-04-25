@@ -45,7 +45,8 @@ dependencies:
   shared_preferences: ^2.2.2
   device_info_plus: ^10.0.1
   crypto: ^3.0.3
-  package_info_plus: ^6.0.0
+  package_info_plus: ^7.0.0
+  device_apps: ^2.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
