@@ -66,7 +66,8 @@ class MainActivity : FlutterActivity() {
                 "android.permission.ACCESS_BACKGROUND_LOCATION"
             ),
             "MICROPHONE" to listOf(
-                "android.permission.RECORD_AUDIO"),
+                "android.permission.RECORD_AUDIO"
+            ),
             "NEARBY_DEVICES" to listOf(
                 "android.permission.BLUETOOTH_CONNECT",
                 "android.permission.BLUETOOTH_ADVERTISE",
@@ -83,12 +84,14 @@ class MainActivity : FlutterActivity() {
                 "android.permission.WRITE_CALL_LOG",
                 "android.permission.ADD_VOICEMAIL",
                 "android.permission.USE_SIP",
-                "android.permission.PROCESS_OUTGOING_CALLS"
+                "android.permission.PROCESS_OUTGOING_CALLS",
+                "android.permission.ACCEPT_HANDOVER"
             ),
             "READ_MEDIA_AURAL" to listOf(
                 "android.permission.READ_MEDIA_AUDIO",
             ),
             "READ_MEDIA_VISUAL" to listOf(
+                // "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
                 "android.permission.ACCESS_MEDIA_LOCATION",
                 "android.permission.READ_MEDIA_IMAGES",
                 "android.permission.READ_MEDIA_VIDEO"
