@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import android.content.pm.ApplicationInfo
 import android.provider.Settings
 
 class MainActivity : FlutterActivity() {
@@ -21,8 +20,8 @@ class MainActivity : FlutterActivity() {
                     result.success(permissions)
                 }
                 "getID_Device" -> {
-                    val deviceId = getID_Device()
-                    result.success(deviceId)
+                    val idDevice = idDevice()
+                    result.success(idDevice)
                 }
                 "getAllPermissions" -> {
                     val permissions = getAllPermissions()
@@ -39,10 +38,10 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    fun getAllPermissionsGroup(): List<Map<String, Any>> {
+    private fun getAllPermissionsGroup(): List<Map<String, Any>> {
         val pm = packageManager
         val permissionGroupMap = mapOf(
-            "ACTIVITY_RECOFNITION" to listOf(
+            "ACTIVITY_RECOGNITION" to listOf(
                 "android.permission.ACTIVITY_RECOGNITION"
             ),
             "CALENDAR" to listOf(
@@ -54,7 +53,8 @@ class MainActivity : FlutterActivity() {
                 "android.permission.WRITE_CALL_LOG"
             ),
             "CAMERA" to listOf(
-                "android.permission.CAMERA"),
+                "android.permission.CAMERA"
+            ),
             "CONTACTS" to listOf(
                 "android.permission.READ_CONTACTS",
                 "android.permission.WRITE_CONTACTS",
@@ -75,7 +75,8 @@ class MainActivity : FlutterActivity() {
                 "android.permission.UWB_RANGING"
             ),
             "NOTIFICATIONS" to listOf(
-                "android.permission.POST_NOTIFICATIONS"),
+                "android.permission.POST_NOTIFICATIONS"
+            ),
             "PHONE" to listOf(
                 "android.permission.READ_PHONE_STATE",
                 "android.permission.READ_PHONE_NUMBERS",
@@ -88,10 +89,9 @@ class MainActivity : FlutterActivity() {
                 "android.permission.ACCEPT_HANDOVER"
             ),
             "READ_MEDIA_AURAL" to listOf(
-                "android.permission.READ_MEDIA_AUDIO",
+                "android.permission.READ_MEDIA_AUDIO"
             ),
             "READ_MEDIA_VISUAL" to listOf(
-                // "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
                 "android.permission.ACCESS_MEDIA_LOCATION",
                 "android.permission.READ_MEDIA_IMAGES",
                 "android.permission.READ_MEDIA_VIDEO"
@@ -110,12 +110,12 @@ class MainActivity : FlutterActivity() {
             "STORAGE" to listOf(
                 "android.permission.READ_EXTERNAL_STORAGE",
                 "android.permission.WRITE_EXTERNAL_STORAGE"
-            ),
-
-
-
-
+            )
         )
+
+
+        val alwaysActiveGroups = setOf("ACTIVITY_RECOGNITION", "CALENDAR", "CALL_LOG", "CONTACTS", "NEARBY_DEVICES", "NOTIFICATIONS", "PHONE", "READ_MEDIA_AURAL", "READ_MEDIA_VISUAL", "SENSORS", "SMS", "STORAGE")
+        val inUseGroups = setOf("CAMERA", "MICROPHONE")
 
         val installedApps = pm.getInstalledApplications(0)
         val appPermissions = mutableListOf<Map<String, Any>>()
@@ -125,36 +125,47 @@ class MainActivity : FlutterActivity() {
             appPermissionStatus["appName"] = app.loadLabel(pm).toString()
             appPermissionStatus["packageName"] = app.packageName
 
-            val groupStatuses = mutableMapOf<String, String>()
+            val packageInfo = pm.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS)
+            val requestedPermissions = packageInfo.requestedPermissions?.toSet() ?: emptySet()
 
-            for ((groupName, permissionList) in permissionGroupMap) {
+            val groupStatuses = mutableMapOf<String, String>()
+            permissionGroupMap.forEach { (groupName, permissions) ->
                 var isGranted = false
                 var isDenied = false
                 var allNotRequested = true
+                var backgroundLocationGranted = false  // Variable to track the specific background location permission
 
-                for (permission in permissionList) {
-                    val checkStatus = pm.checkPermission(permission, app.packageName)
-
-                    if (checkStatus == PackageManager.PERMISSION_GRANTED) {
-                        isGranted = true
+                permissions.forEach { permission ->
+                    if (requestedPermissions.contains(permission)) {
                         allNotRequested = false
-                        break
-                    }
-
-                    if (checkStatus == PackageManager.PERMISSION_DENIED) {
-                        if (pm.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS).requestedPermissions?.contains(permission) == true) {
+                        val checkStatus = pm.checkPermission(permission, app.packageName)
+                        if (checkStatus == PackageManager.PERMISSION_GRANTED) {
+                            isGranted = true
+                            if (permission == "android.permission.ACCESS_BACKGROUND_LOCATION") {
+                                backgroundLocationGranted = true  // Only set this if the specific permission is granted
+                            }
+                        } else if (checkStatus == PackageManager.PERMISSION_DENIED) {
                             isDenied = true
-                            allNotRequested = false
                         }
                     }
                 }
 
-                groupStatuses[groupName] = when {
-                    isGranted -> "concedido"
-                    isDenied -> "denegado"
-                    allNotRequested -> "no solicitado"
-                    else -> "desconocido"
+                val status = when {
+                    groupName == "LOCATION" && backgroundLocationGranted -> "Always"
+                    groupName == "LOCATION" && isGranted -> "While in use"
+                    isGranted && alwaysActiveGroups.contains(groupName) -> "Always"
+                    isGranted && inUseGroups.contains(groupName) -> "While in use"
+                    isDenied -> "Denied"
+                    allNotRequested -> "Not requested"
+                    else -> "Unknown"
                 }
+                groupStatuses[groupName] = status
+            }
+
+            // Adjust "READ_MEDIA_AURAL" and "READ_MEDIA_VISUAL" permissions based on "STORAGE" for Android 12 or lower
+            if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.S && groupStatuses["STORAGE"] == "Always") {
+                groupStatuses["READ_MEDIA_AURAL"] = "Always"
+                groupStatuses["READ_MEDIA_VISUAL"] = "Always"
             }
 
             appPermissionStatus["permissionGroups"] = groupStatuses
@@ -162,11 +173,52 @@ class MainActivity : FlutterActivity() {
         }
 
         return appPermissions
+
+    }
+
+    fun detectPermissionChanges(previousPermissions: List<Map<String, Any>>): List<String> {
+        val pm = packageManager
+        val actualPermissions = getAllPermissionsGroup()
+        val changes = mutableListOf<String>()
+
+        val previousPermissionsMap = previousPermissions.associateBy { it["packageName"] as String }
+        val actualPermissionsMap = actualPermissions.associateBy { it["packageName"] as String }
+
+        for ((packageName, actualPermissionStatus) in actualPermissionsMap) {
+            if (previousPermissionsMap.containsKey(packageName)) {
+                val previousGroups = (previousPermissionsMap[packageName]?.get("permissionGroups") as Map<String, String>)
+                val actualGroups = actualPermissionStatus["permissionGroups"] as Map<String, String>
+                for ((groupName, actualStatus) in actualGroups) {
+                    val previousStatus = previousGroups[groupName]
+                    if (previousStatus != actualStatus) {
+                        changes.add("$packageName: Permission group '$groupName' changed from '$previousStatus' to '$actualStatus'")
+                    }
+                }
+            } else {
+                val actualGroups = actualPermissionStatus["permissionGroups"] as Map<String, String>
+                for ((groupName, actualStatus) in actualGroups) {
+                    changes.add("$packageName: New permission group '$groupName' granted with status '$actualStatus'")
+                }
+            }
+        }
+
+        for ((packageName, _) in previousPermissionsMap) {
+            if (!actualPermissionsMap.containsKey(packageName)) {
+                changes.add("$packageName: Package removed, permissions revoked")
+            }
+        }
+
+        return changes
     }
 
 
+
+
+
+
+
     //Funcion para obtener todos los permisos de las aplicaciones individuales
-    fun getAllPermissions(): List<Map<String, Any>> {
+    private fun getAllPermissions(): List<Map<String, Any>> {
         val pm = packageManager
 
         // Definir el mapa entre grupos de permisos y permisos concretos
@@ -220,8 +272,6 @@ class MainActivity : FlutterActivity() {
 
         // Obtener todas las aplicaciones del dispositivo
         val installedApps = pm.getInstalledApplications(0)
-
-        // Almacenar el estado de cada grupo de permisos para cada aplicación
         val appPermissions = mutableListOf<Map<String, Any>>()
 
         for (app in installedApps) {
@@ -229,30 +279,42 @@ class MainActivity : FlutterActivity() {
             appPermissionStatus["appName"] = app.loadLabel(pm).toString()
             appPermissionStatus["packageName"] = app.packageName
 
-            val groupStatuses = mutableMapOf<String, Map<String, String>>()
+            val groupStatuses = mutableMapOf<String, String>()
 
             for ((groupName, permissionList) in permissionGroupMap) {
-                val statusMap = mutableMapOf<String, String>()
+                var isGranted = false
+                var isDenied = false
+                var allNotRequested = true
+                var backgroundLocationGranted = false
 
                 for (permission in permissionList) {
                     val checkStatus = pm.checkPermission(permission, app.packageName)
 
-                    val status = when (checkStatus) {
-                        PackageManager.PERMISSION_GRANTED -> "concedido"
-                        PackageManager.PERMISSION_DENIED -> {
-                            if (pm.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS).requestedPermissions?.contains(permission) == true) {
-                                "denegado"
-                            } else {
-                                "no solicitado"
-                            }
+                    if (checkStatus == PackageManager.PERMISSION_GRANTED) {
+                        isGranted = true
+                        allNotRequested = false
+                        if (permission == "android.permission.ACCESS_BACKGROUND_LOCATION") {
+                            backgroundLocationGranted = true
                         }
-                        else -> "desconocido"
                     }
 
-                    statusMap[permission] = status
+                    if (checkStatus == PackageManager.PERMISSION_DENIED) {
+                        if (pm.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS).requestedPermissions?.contains(permission) == true) {
+                            isDenied = true
+                            allNotRequested = false
+                        }
+                    }
                 }
 
-                groupStatuses[groupName] = statusMap
+                val status = when {
+                    groupName == "LOCATION" && backgroundLocationGranted -> "siempre activo"
+                    groupName == "LOCATION" && isGranted && !backgroundLocationGranted -> "activo en uso"
+                    isGranted -> "concedido"
+                    isDenied -> "denegado"
+                    allNotRequested -> "no solicitado"
+                    else -> "desconocido"
+                }
+                groupStatuses[groupName] = status
             }
 
             appPermissionStatus["permissionGroups"] = groupStatuses
@@ -262,7 +324,7 @@ class MainActivity : FlutterActivity() {
         return appPermissions
     }
 
-    fun getAllPermissionsOfTheApps(): List<Map<String, Any>> {
+    private fun getAllPermissionsOfTheApps(): List<Map<String, Any>> {
         val pm = packageManager
         val installedApps = pm.getInstalledApplications(0)
 
@@ -284,20 +346,32 @@ class MainActivity : FlutterActivity() {
                     permissionInfo["permissionName"] = permission
 
                     val checkStatus = pm.checkPermission(permission, app.packageName)
-                    val status = when (checkStatus) {
-                        PackageManager.PERMISSION_GRANTED -> "Concedido"
-                        PackageManager.PERMISSION_DENIED -> "Denegado"
-                        else -> "Desconocido"
+                    if (checkStatus == PackageManager.PERMISSION_GRANTED) {
+                        permissionInfo["status"] = "Concedido"
+                    } else if (checkStatus == PackageManager.PERMISSION_DENIED) {
+                        // Comprueba si la versión del OS es al menos Marshmallow (API level 23)
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            // Asegúrate de que this se refiere a una instancia de una Activity
+                            if (shouldShowRequestPermissionRationale(permission)) {
+                                permissionInfo["status"] = "Preguntar siempre"
+                            } else {
+                                permissionInfo["status"] = "Denegado"
+                            }
+                        } else {
+                            // En versiones anteriores a Marshmallow, no se puede saber si "preguntar siempre"
+                            permissionInfo["status"] = "Denegado"
+                        }
+                    } else {
+                        permissionInfo["status"] = "Desconocido"
                     }
 
-                    permissionInfo["status"] = status
                     permissionStatuses.add(permissionInfo)
                 }
 
                 appInfo["requestedPermissions"] = permissionStatuses
 
             } catch (e: Exception) {
-                appInfo["requestedPermissions"] = listOf("Error al obtener permisos")
+                appInfo["requestedPermissions"] = listOf("Error al obtener permisos: ${e.message}")
             }
 
             appPermissionsList.add(appInfo)
@@ -308,8 +382,11 @@ class MainActivity : FlutterActivity() {
 
 
 
+
+
+
     @SuppressLint("HardwareIds")
-    fun getID_Device(): String {
+    private fun idDevice(): String {
         return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
     }
 }

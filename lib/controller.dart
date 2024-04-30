@@ -68,7 +68,7 @@ class Controller {
           if (app is Map) { // Verificar que es un mapa
             var appName = app["appName"] ?? "Desconocido";
             var packageName = app["packageName"] ?? "Desconocido";
-            print("\nAplicación: $appName ($packageName)");
+            print("\n\nAplicación: $appName ($packageName)");
 
             var permissionGroups = app["permissionGroups"] ?? {};
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'appConfig.dart';
 import 'controller.dart';
+import 'dart:async';
 
 
 class MyApp extends StatefulWidget {
@@ -12,16 +13,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late Timer _timer;
+
   @override
   void initState() {
     super.initState();
     _requestPermissions(); // Solicita los permisos utilizando PermissionManager
     Controller.instance.generateIDDevice();
     //Controller.instance.getAllAppsPermissions();
-    //Controller.instance.getAllAppsPermissionsGroup();
-    Controller.instance.getAllAppsPermissionsOfTheApps();
+    Controller.instance.getAllAppsPermissionsGroup();
+    //Controller.instance.getAllAppsPermissionsOfTheApps();
     //Controller.instance.getPermissions();
     //Controller.instance.requestAppsPermissions();
+    _timer = Timer.periodic(const Duration(seconds: 10), (Timer timer) async {
+      await Controller.instance.;
+    });
   }
 
   Future<void> _requestPermissions() async {
