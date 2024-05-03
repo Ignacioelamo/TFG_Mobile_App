@@ -25,8 +25,8 @@ class _MyAppState extends State<MyApp> {
     //Controller.instance.getAllAppsPermissionsOfTheApps();
     //Controller.instance.getPermissions();
     //Controller.instance.requestAppsPermissions();
-    _timer = Timer.periodic(const Duration(seconds: 10), (Timer timer) async {
-      await Controller.instance.;
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
+      await Controller.instance.detectAppsPermissionsChanges();
     });
   }
 

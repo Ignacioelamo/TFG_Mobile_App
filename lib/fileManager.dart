@@ -1,14 +1,21 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file/open_file.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'appConfig.dart';
+import 'tools.dart';
 
 class FileManager{
 
   FileManager._privateConstructor();
   static final FileManager instance = FileManager._privateConstructor();
+
+
 
 
   Future<String> getFilePath(String fileName) async {
@@ -88,9 +95,72 @@ class FileManager{
   }
 
   Future<void> generateIDDevice() async {
-    createFile('idDevice.txt');
+
+    if (await _fileExists(AppConfig.idDeviceFileName) == false){
+      createFile(AppConfig.idDeviceFileName);
+      String id = await const MethodChannel('flutter_channel').invokeMethod('getDeviceId');
+      saveFile('idDevice.txt', id);
+      print("El id del dispostivo es: $id");
+    }else{
+      print("El archivo ya existe");
+    }
+
+
+  }
+  Future<void> generatePermissionsGroup(List<dynamic> result) async {
+
+    if (await _fileExists(AppConfig.permissionsGroupFileName) == false) {
+      final sharedPrefs = await SharedPreferences.getInstance();
+
+      //Serializamos la lista de mapas de permisos a JSON
+      sharedPrefs.setString('permissions', jsonEncode(result));
+
+      await createFile('groupPermissions.csv');
+      // Leer el ID del dispositivo
+      var id = await readFromFile(AppConfig.idDeviceFileName) as String;
+      await writeToFile('groupPermissions.csv', 'Device ID,$id\n\n');  // Añadir un salto de línea para separar el ID
+
+      // Escribir encabezados para las aplicaciones
+      var header = 'Permission';  // Iniciar con el encabezado de permisos
+      for (var app in result) {
+        header += ',${app['packageName']}';  // Asegurarse de que 'appName' es el campo correcto
+      }
+      await writeToFile('groupPermissions.csv', header + '\n');
+
+      // Escribir cada fila de permiso
+      for (var permission in Tools.instance.permissionGroups) {
+        var row = permission;
+        for (var app in result) {
+          var permissionStatus = (app['permissionGroups'] as Map)[permission] ?? 'Not requested';
+          row += ',$permissionStatus';
+        }
+        await writeToFile('groupPermissions.csv', row + '\n');
+    }
+    }else{
+      print("El archivo ya existe");
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getOldGroupPermissions() async {
+    final sharedPrefs = await SharedPreferences.getInstance();
+    String? json = sharedPrefs.getString('permissions');
+    if (json == null) {
+      print('No se encontraron permisos en el almacenamiento local');
+      return [];
+    }else{
+      return List<Map<String, dynamic>>.from(jsonDecode(json).map((x) => Map<String, dynamic>.from(x)));
+    }
+  }
+
+
+
+
+
+/*
+  Future<void> generatePermissionsGroup(var result) async {
+    createFile('permissionsGroup.txt');
     String id = await MethodChannel('flutter_channel').invokeMethod('getDeviceId');
     saveFile('idDevice.txt', id);
     print("El id del dispostivo es: $id");
-  }
+  }*/
 }

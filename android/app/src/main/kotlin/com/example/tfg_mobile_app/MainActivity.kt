@@ -23,6 +23,11 @@ class MainActivity : FlutterActivity() {
                     val idDevice = idDevice()
                     result.success(idDevice)
                 }
+                "detectChangesPermissionsGroup" ->{
+                    val oldPermissions = call.argument<List<Map<String, Any>>>("oldPermissions")
+                    val changes = detectChangesPermissionsGroup(oldPermissions ?: emptyList())
+                    result.success(changes)
+                }
                 "getAllPermissions" -> {
                     val permissions = getAllPermissions()
                     result.success(permissions)
@@ -176,7 +181,7 @@ class MainActivity : FlutterActivity() {
 
     }
 
-    fun detectPermissionChanges(previousPermissions: List<Map<String, Any>>): List<String> {
+    fun detectChangesPermissionsGroup(previousPermissions: List<Map<String, Any>>): List<String> {
         val pm = packageManager
         val actualPermissions = getAllPermissionsGroup()
         val changes = mutableListOf<String>()

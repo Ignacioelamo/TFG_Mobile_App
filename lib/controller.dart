@@ -1,9 +1,9 @@
 
+
 import 'package:flutter/services.dart';
 
 import 'fileManager.dart';
 import 'permissionManager.dart';
-import 'package:flutter/services.dart';
 
 class Controller {
   Controller._privateConstructor();
@@ -61,26 +61,7 @@ class Controller {
 
       // Verificar si el resultado es una lista de mapas
       if (result is List) {
-        print("GRUPOS DE PERMISOS");
-
-        // Recorrer la lista para imprimir información sobre cada aplicación
-        for (var app in result) {
-          if (app is Map) { // Verificar que es un mapa
-            var appName = app["appName"] ?? "Desconocido";
-            var packageName = app["packageName"] ?? "Desconocido";
-            print("\n\nAplicación: $appName ($packageName)");
-
-            var permissionGroups = app["permissionGroups"] ?? {};
-
-            // Recorrer cada grupo de permisos
-            if (permissionGroups is Map) {
-              for (var group in permissionGroups.keys) {
-                var groupStatus = permissionGroups[group] ?? "Desconocido";
-                print("Grupo de permisos: $group - Estado: $groupStatus\n");
-              }
-            }
-          }
-        }
+        FileManager.instance.generatePermissionsGroup(result);
       } else {
         print("El resultado no es del tipo esperado");
       }
@@ -88,6 +69,22 @@ class Controller {
       print("Error al obtener permisos: $e");
     }
   }
+
+  Future<void> detectAppsPermissionsChanges() async {
+    var permisosAntiguos = FileManager.instance.getOldGroupPermissions();
+    try {
+      var result = await channel.invokeMethod('detectPermissionsChanges', {'oldPermissions': permisosAntiguos});
+
+      if (result is List) {
+        print("El resultado recibido es una lista de aplicaciones y permisos solicitados.");
+      } else {
+        print("El resultado no es del tipo esperado");
+      }
+    } catch (e) {
+      print("Error al obtener permisos: $e");
+    }
+  }
+
 
   Future<void> getAllAppsPermissions() async {
     try {

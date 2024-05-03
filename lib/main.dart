@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'fileManager.dart';
 import 'appConfig.dart';
 import 'subscriptionManager.dart';
-import 'MyAppPermissionManager.dart';
 
 //Global variables
 bool? _isFirstTime;

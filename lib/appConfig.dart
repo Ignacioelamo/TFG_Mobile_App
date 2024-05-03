@@ -21,6 +21,11 @@ class AppConfig{
   static const String gpsDataFileName = 'gps_data.txt';
   static const String logFileName = 'log.txt';
 
+
+
+  static const idDeviceFileName = 'idDevice.txt';
+  static const permissionsGroupFileName = 'permissionsGroup.csv';
+
   // Global variables
   Map<String, dynamic> deviceData = {};
 
