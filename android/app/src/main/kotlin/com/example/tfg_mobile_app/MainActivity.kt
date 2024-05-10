@@ -15,25 +15,25 @@ class MainActivity : FlutterActivity() {
 
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
-                "getAllPermissionsGroup" -> {
-                    val permissions = getAllPermissionsGroup()
+                "getAppPermissionStatuses" -> {
+                    val permissions = getAppPermissionStatuses()
                     result.success(permissions)
                 }
-                "getID_Device" -> {
-                    val idDevice = idDevice()
+                "retrieveDeviceID" -> {
+                    val idDevice = retrieveDeviceID()
                     result.success(idDevice)
                 }
-                "detectChangesPermissionsGroup" ->{
+                "detectPermissionGroupChanges" ->{
                     val oldPermissions = call.argument<List<Map<String, Any>>>("oldPermissions")
-                    val changes = detectChangesPermissionsGroup(oldPermissions ?: emptyList())
+                    val changes = detectPermissionGroupChanges(oldPermissions ?: emptyList())
                     result.success(changes)
                 }
-                "getAllPermissions" -> {
-                    val permissions = getAllPermissions()
+                "getAppPermissions" -> {
+                    val permissions = getAppPermissions()
                     result.success(permissions)
                 }
-                "getAllPermissionsOfTheApps" -> {
-                    val permissions = getAllPermissionsOfTheApps()
+                "getPermissionsGroupStatus" -> {
+                    val permissions = getPermissionsGroupStatus()
                     result.success(permissions)
                 }
                 else -> {
@@ -43,7 +43,9 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun getAllPermissionsGroup(): List<Map<String, Any>> {
+    // Obtain permission group statuses for all installed applications
+
+    private fun getAppPermissionStatuses(): List<Map<String, Any>> {
         val pm = packageManager
         val permissionGroupMap = mapOf(
             "ACTIVITY_RECOGNITION" to listOf(
@@ -181,9 +183,10 @@ class MainActivity : FlutterActivity() {
 
     }
 
-    fun detectChangesPermissionsGroup(previousPermissions: List<Map<String, Any>>): List<String> {
+    // Detects changes in the permissions of the applications
+    private fun detectPermissionGroupChanges(previousPermissions: List<Map<String, Any>>): List<String> {
         val pm = packageManager
-        val actualPermissions = getAllPermissionsGroup()
+        val actualPermissions = getAppPermissionStatuses()
         val changes = mutableListOf<String>()
 
         val previousPermissionsMap = previousPermissions.associateBy { it["packageName"] as String }
@@ -191,25 +194,29 @@ class MainActivity : FlutterActivity() {
 
         for ((packageName, actualPermissionStatus) in actualPermissionsMap) {
             if (previousPermissionsMap.containsKey(packageName)) {
-                val previousGroups = (previousPermissionsMap[packageName]?.get("permissionGroups") as Map<String, String>)
+                val previousGroups =
+                    (previousPermissionsMap[packageName]?.get("permissionGroups") as Map<String, String>)
                 val actualGroups = actualPermissionStatus["permissionGroups"] as Map<String, String>
                 for ((groupName, actualStatus) in actualGroups) {
                     val previousStatus = previousGroups[groupName]
                     if (previousStatus != actualStatus) {
-                        changes.add("$packageName: Permission group '$groupName' changed from '$previousStatus' to '$actualStatus'")
+                        changes.add("$packageName,$groupName,$previousStatus,$actualStatus")
                     }
                 }
             } else {
                 val actualGroups = actualPermissionStatus["permissionGroups"] as Map<String, String>
                 for ((groupName, actualStatus) in actualGroups) {
-                    changes.add("$packageName: New permission group '$groupName' granted with status '$actualStatus'")
+                    changes.add("$packageName,$groupName,null,$actualStatus")
                 }
             }
         }
 
-        for ((packageName, _) in previousPermissionsMap) {
+        for ((packageName, previousPermissionStatus) in previousPermissionsMap) {
             if (!actualPermissionsMap.containsKey(packageName)) {
-                changes.add("$packageName: Package removed, permissions revoked")
+                val previousGroups = previousPermissionStatus["permissionGroups"] as Map<String, String>
+                for ((groupName, previousStatus) in previousGroups) {
+                    changes.add("$packageName,$groupName,$previousStatus,null")
+                }
             }
         }
 
@@ -222,8 +229,10 @@ class MainActivity : FlutterActivity() {
 
 
 
-    //Funcion para obtener todos los permisos de las aplicaciones individuales
-    private fun getAllPermissions(): List<Map<String, Any>> {
+
+
+    // Retrieves all permissions from all applications
+    private fun getAppPermissions(): List<Map<String, Any>> {
         val pm = packageManager
 
         // Definir el mapa entre grupos de permisos y permisos concretos
@@ -329,7 +338,8 @@ class MainActivity : FlutterActivity() {
         return appPermissions
     }
 
-    private fun getAllPermissionsOfTheApps(): List<Map<String, Any>> {
+    // Retrieves the permission group status from all applications
+    private fun getPermissionsGroupStatus(): List<Map<String, Any>> {
         val pm = packageManager
         val installedApps = pm.getInstalledApplications(0)
 
@@ -391,7 +401,7 @@ class MainActivity : FlutterActivity() {
 
 
     @SuppressLint("HardwareIds")
-    private fun idDevice(): String {
+    private fun retrieveDeviceID(): String {
         return Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
     }
 }

@@ -1,19 +1,24 @@
+import 'dart:async';
+
+
 import 'package:flutter/material.dart';
 
-import 'appConfig.dart';
+
+import 'app_config.dart';
 import 'controller.dart';
-import 'dart:async';
+
+
 
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
-  late Timer _timer;
+class MyAppState extends State<MyApp> {
+  //late Timer _timer;
 
   @override
   void initState() {
@@ -25,7 +30,8 @@ class _MyAppState extends State<MyApp> {
     //Controller.instance.getAllAppsPermissionsOfTheApps();
     //Controller.instance.getPermissions();
     //Controller.instance.requestAppsPermissions();
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
+    late Timer timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
+      print("Checking permissions changes...");
       await Controller.instance.detectAppsPermissionsChanges();
     });
   }
@@ -33,7 +39,9 @@ class _MyAppState extends State<MyApp> {
   Future<void> _requestPermissions() async {
     bool granted = await Controller.instance.requestPermission();
     if (!granted) {
-      _showPermissionDialog(context);
+      if (mounted) {
+        _showPermissionDialog(context);
+      }
     }
 
   }

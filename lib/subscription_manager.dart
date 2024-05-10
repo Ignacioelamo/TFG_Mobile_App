@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'fileManager.dart';
-import 'appConfig.dart';
+import 'file_manager.dart';
+import 'app_config.dart';
 import 'package:gps_connectivity/gps_connectivity.dart';
 
 class SubscriptionManager{
