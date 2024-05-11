@@ -29,9 +29,12 @@ Future<void> initializeService() async {
   final service = FlutterBackgroundService();
 
   await service.configure(
-      iosConfiguration: IosConfiguration(),
-      androidConfiguration:
-          AndroidConfiguration(onStart: onStart, isForegroundMode: false));
+    iosConfiguration: IosConfiguration(),
+    androidConfiguration: AndroidConfiguration(
+      onStart: onStart,
+      isForegroundMode: true, // Cambiar esto a true para usar modo foregrou
+    ),
+  );
 
   await service.startService();
 }
@@ -39,17 +42,17 @@ Future<void> initializeService() async {
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) async {
   if (service is AndroidServiceInstance) {
-    await handleFirstTimeInitialization();
+    //await handleFirstTimeInitialization();
     Controller.instance.subscribeToGpsChanges();
   }
 }
 
-Future<void> handleFirstTimeInitialization() async {
+/*Future<void> handleFirstTimeInitialization() async {
   if (await isFirstTime()) {
-    Controller.instance.createFiles();
+    //Si queremos que algo se haga al iniciar el servicio por primera vez
   }
-}
-
+}*/
+/*
 Future<bool> isFirstTime() async {
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isFirstTime = prefs.getBool('firstTime') ?? true;
@@ -57,4 +60,4 @@ Future<bool> isFirstTime() async {
     prefs.setBool('firstTime', false);
   }
   return isFirstTime;
-}
+}*/

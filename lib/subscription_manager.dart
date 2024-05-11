@@ -11,7 +11,7 @@ class SubscriptionManager{
   static final SubscriptionManager instance = SubscriptionManager._privateConstructor();
 
   //Global variables
-  String? _lastGpsDate;
+  String? _lastGpsTime;
   String? _lastGpsData;
 
   // All the subscriptions that the app has
@@ -43,6 +43,7 @@ class SubscriptionManager{
     try{
       if (gpsSubscription == null){
         gpsSubscription = GpsConnectivity().onGpsConnectivityChanged.listen((bool result) async{
+          print("Entro aquí");
           await saveGpsData(AppConfig.gpsDataFileName);
         });
         updateSubscription('gps', gpsSubscription != null);
@@ -52,25 +53,24 @@ class SubscriptionManager{
     }
   }
 
-   Future<void> saveGpsData(String fileName) async {
-    String gpsData = await GpsConnectivity().checkGpsConnectivity() ? 'GPS_connected' : 'GPS_disconnected';
-
+  Future<void> saveGpsData(String fileName) async {
+    bool gpsConnected = await GpsConnectivity().checkGpsConnectivity();
     DateTime now = DateTime.now();
-    String date = '${now.year}-${now.month}-${now.day}-${now.hour}-${now.minute}-${now.second}-${now.millisecond}';
-    String gpsInfo = 'Date: $date:$gpsData\n';
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? serialNumber = prefs.getString('serialNumber');
-    if (_lastGpsDate != date && _lastGpsData != gpsData || _lastGpsDate == null){
-      _lastGpsDate = date;
+    String gpsData = gpsConnected ? 'enabled' : 'disabled';
+    String formattedDate = '${now.year}-${now.month}-${now.day}';
+    String formattedTime = '${now.hour}:${now.minute}:${now.second}';
+
+    String gpsInfo = '$formattedDate,$formattedTime,$gpsData\n';
+
+
+    if (_lastGpsTime != formattedTime && _lastGpsData != gpsData || _lastGpsTime == null){
+      _lastGpsTime = formattedTime;
       _lastGpsData = gpsData;
       await FileManager.instance.saveFile(fileName, gpsInfo);
-      await FileManager.instance.saveFile(fileName, 'id: $serialNumber\n');
-    }else{
+    } else {
       return;
     }
-
-
   }
 
 }

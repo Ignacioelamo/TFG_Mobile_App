@@ -2,6 +2,7 @@ import 'dart:async';
 
 
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 import 'app_config.dart';
@@ -18,23 +19,37 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  //late Timer _timer;
+  late Timer _timer;
 
   @override
   void initState() {
     super.initState();
     _requestPermissions(); // Solicita los permisos utilizando PermissionManager
-    Controller.instance.generateIDDevice();
-    //Controller.instance.getAllAppsPermissions();
-    Controller.instance.getAllAppsPermissionsGroup();
+    _createFiles(); // Crea los archivos de datos
+
     //Controller.instance.getAllAppsPermissionsOfTheApps();
     //Controller.instance.getPermissions();
     //Controller.instance.requestAppsPermissions();
-    late Timer timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
       print("Checking permissions changes...");
       await Controller.instance.detectAppsPermissionsChanges();
     });
   }
+
+
+  Future<void> _createFiles() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    bool isFirstTime = prefs.getBool('firstTime') ?? true;
+
+    if (isFirstTime) {
+      prefs.setBool('firstTime', false);
+      await Controller.instance.createFiles();
+      await Controller.instance.getAllAppsPermissionsGroup();
+    }
+
+  }
+
 
   Future<void> _requestPermissions() async {
     bool granted = await Controller.instance.requestPermission();

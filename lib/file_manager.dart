@@ -109,11 +109,11 @@ class FileManager {
       // Serializar la lista de mapas de permisos a JSON
       String json = jsonEncode(result);
       //Serializamos la lista de mapas de permisos a JSON
-      sharedPrefs.setString('permissions', json);
+      sharedPrefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps, json);
 
       await createFile('groupPermissions.csv');
       // Leer el ID del dispositivo
-      var id = await readFromFile(AppConfig.idDeviceFileName);
+      var id = sharedPrefs.getString(AppConfig.sharedPreferencesIdDevice);
       await writeToFile('groupPermissions.csv',
           'Device ID,$id\n\n'); // Añadir un salto de línea para separar el ID
 
@@ -142,7 +142,7 @@ class FileManager {
 
   Future<List<Map<String, dynamic>>> getOldGroupPermissions() async {
     final sharedPrefs = await SharedPreferences.getInstance();
-    String? json = sharedPrefs.getString('permissions');
+    String? json = sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
     if (json == null) {
       print('No se encontraron permisos en el almacenamiento local');
       return [];
@@ -153,13 +153,15 @@ class FileManager {
   }
 
   Future<void> updateOldGroupPermissions(List<String> newPermissions) async {
-    final id = await readFromFile(AppConfig.idDeviceFileName); // Asegúrate de que este archivo contenga un id único para el dispositivo o sesión
+    final sharedPrefs = await SharedPreferences.getInstance();
+    String? json = sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
+    String? id = sharedPrefs.getString(AppConfig.sharedPreferencesIdDevice);
+
     final DateTime now = DateTime.now();
     final DateFormat formatter = DateFormat('yyyy-MM-dd,HH:mm:ss');
     final String formattedDate = formatter.format(now);
 
-    final sharedPrefs = await SharedPreferences.getInstance();
-    String? json = sharedPrefs.getString('permissions');
+
 
     if (json == null) {
       print('No se encontraron permisos en el almacenamiento local');
@@ -181,7 +183,7 @@ class FileManager {
       for (Map<String, dynamic> appPermissions in oldPermissions) {
         if (appPermissions['packageName'] == packageName) {
           Map<String, dynamic>? permissionsGroup = appPermissions['permissionGroups'];
-          if (permissionsGroup != null && permissionsGroup.containsKey(permissionName)) {
+          if (permissionsGroup != null && permissionsGroup.containsKey(permissionName) && newStatus != permissionsGroup[permissionName]) {
             String oldStatus = permissionsGroup[permissionName];
             permissionsGroup[permissionName] = newStatus; // Actualizar el permiso
             // Registrar cambio
@@ -194,7 +196,7 @@ class FileManager {
 
     // Serializar y guardar los cambios
     String updatedJson = jsonEncode(oldPermissions);
-    await sharedPrefs.setString('permissions', updatedJson);
+    await sharedPrefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps, updatedJson);
     print("Permisos actualizados correctamente.");
 
     if (updates.isNotEmpty) {
@@ -209,6 +211,7 @@ class FileManager {
     }
   }
 
+  /*
   Future<void> _createPermissionUpdatesFile() async {
     String fileName = AppConfig.permissionsUpdatesFileName;
     if (await _fileExists(fileName)) {
@@ -221,7 +224,7 @@ class FileManager {
     String header = 'id,Fecha,hora,packageName,groupName,PreviousStatus,actualStatus\n';
     await writeToFile(fileName, header);
     print("Cabecera escrita en el archivo: $fileName");
-  }
+  }*/
 
 
 

@@ -24,6 +24,9 @@ class AppConfig {
   static const getAllAppPermissionsMethod = 'getAppPermissions';
   static const getPermissionsGroupStatusMethod = 'getPermissionsGroupStatus';
 
+  static const sharedPreferencesIdDevice = 'deviceId';
+  static const sharedPreferencesPermissionsGroupApps = 'permissions';
+
   final List<String> permissionGroups = [
     "ACTIVITY_RECOGNITION",
     "CALENDAR",

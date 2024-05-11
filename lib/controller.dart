@@ -1,3 +1,5 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'file_manager.dart';
 import 'permission_manager.dart';
 import 'subscription_manager.dart';
@@ -47,6 +49,8 @@ class Controller {
         if (result.isNotEmpty) {
           List<String> newPermissions = List<String>.from(result.map((x) => x.toString()));
           FileManager.instance.updateOldGroupPermissions(newPermissions);
+        }else{
+          print("No hay cambios en los permisos");
         }
       } else {
         print("El resultado no es del tipo esperado");
@@ -56,17 +60,16 @@ class Controller {
     }
   }
 
+  Future<String> generateOrRetrieveDeviceId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
 
+    if (deviceId == null) {
+      deviceId = await AppConfig.channel.invokeMethod(AppConfig.getDeviceIdMethod);
+      await prefs.setString(AppConfig.sharedPreferencesIdDevice, deviceId!);
+    }
 
-
-
-
-
-  Future<void> generateIDDevice() async {
-    String idDevice = await AppConfig.channel.invokeMethod(AppConfig.getDeviceIdMethod);
-    print('ID del dispositivo: $idDevice');
-    FileManager.instance.createFile('idDevice.txt');
-    FileManager.instance.writeToFile('idDevice.txt', idDevice);
+    return deviceId;
   }
 
   Future<void> subscribeToGpsChanges() async {
@@ -74,8 +77,20 @@ class Controller {
   }
 
   Future<void> createFiles() async {
+
     FileManager.instance.createFile(AppConfig.gpsDataFileName);
+    String id = await generateOrRetrieveDeviceId();
+    String header = 'id:$id\n\nDate,Hour,Status\n';
+    await FileManager.instance.saveFile(AppConfig.gpsDataFileName, header);
+
+    header = 'id:$id\n\n';
     FileManager.instance.createFile(AppConfig.logFileName);
+    await FileManager.instance.saveFile(AppConfig.logFileName, header);
+
+    header = 'id, Date, Time, packageName, groupName, PreviousStatus, CurrentStatus\n';
+    FileManager.instance.createFile(AppConfig.permissionsUpdatesFileName);
+    await FileManager.instance.saveFile(AppConfig.permissionsUpdatesFileName, header);
+
   }
 
 
