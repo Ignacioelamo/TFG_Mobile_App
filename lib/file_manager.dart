@@ -11,11 +11,9 @@ import 'package:intl/intl.dart';
 import 'app_config.dart';
 
 class FileManager {
-
   FileManager._privateConstructor();
 
   static final FileManager instance = FileManager._privateConstructor();
-
 
   Future<String> getFilePath(String fileName) async {
     Directory? appDocDir = await getExternalStorageDirectory();
@@ -43,7 +41,6 @@ class FileManager {
   Future<void> saveFile(String fileName, String content) async {
     await writeToFile(fileName, content);
   }
-
 
   Future<void> createFile(String fileName) async {
     if (await _fileExists(fileName)) {
@@ -84,23 +81,10 @@ class FileManager {
     }
   }
 
-
   Future<bool> _fileExists(String fileName) async {
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     return file.exists();
-  }
-
-  Future<void> generateIDDevice() async {
-    if (await _fileExists(AppConfig.idDeviceFileName) == false) {
-      createFile(AppConfig.idDeviceFileName);
-      String id = await const MethodChannel('flutter_channel').invokeMethod(
-          'getDeviceId');
-      saveFile('idDevice.txt', id);
-      print("El id del dispostivo es: $id");
-    } else {
-      print("El archivo ya existe");
-    }
   }
 
   Future<void> generatePermissionsGroup(List<dynamic> result) async {
@@ -109,7 +93,8 @@ class FileManager {
       // Serializar la lista de mapas de permisos a JSON
       String json = jsonEncode(result);
       //Serializamos la lista de mapas de permisos a JSON
-      sharedPrefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps, json);
+      sharedPrefs.setString(
+          AppConfig.sharedPreferencesPermissionsGroupApps, json);
 
       await createFile('groupPermissions.csv');
       // Leer el ID del dispositivo
@@ -121,7 +106,7 @@ class FileManager {
       var header = 'Permission'; // Iniciar con el encabezado de permisos
       for (var app in result) {
         header +=
-        ',${app['packageName']}'; // Asegurarse de que 'appName' es el campo correcto
+            ',${app['packageName']}'; // Asegurarse de que 'appName' es el campo correcto
       }
       await writeToFile('groupPermissions.csv', '$header\n');
 
@@ -129,8 +114,8 @@ class FileManager {
       for (var permission in AppConfig.instance.permissionGroups) {
         var row = permission;
         for (var app in result) {
-          var permissionStatus = (app['permissionGroups'] as Map)[permission] ??
-              'Not requested';
+          var permissionStatus =
+              (app['permissionGroups'] as Map)[permission] ?? 'Not requested';
           row += ',$permissionStatus';
         }
         await writeToFile('groupPermissions.csv', '$row\n');
@@ -142,7 +127,8 @@ class FileManager {
 
   Future<List<Map<String, dynamic>>> getOldGroupPermissions() async {
     final sharedPrefs = await SharedPreferences.getInstance();
-    String? json = sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
+    String? json =
+        sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
     if (json == null) {
       print('No se encontraron permisos en el almacenamiento local');
       return [];
@@ -154,21 +140,21 @@ class FileManager {
 
   Future<void> updateOldGroupPermissions(List<String> newPermissions) async {
     final sharedPrefs = await SharedPreferences.getInstance();
-    String? json = sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
+    String? json =
+        sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
     String? id = sharedPrefs.getString(AppConfig.sharedPreferencesIdDevice);
 
     final DateTime now = DateTime.now();
     final DateFormat formatter = DateFormat('yyyy-MM-dd,HH:mm:ss');
     final String formattedDate = formatter.format(now);
 
-
-
     if (json == null) {
       print('No se encontraron permisos en el almacenamiento local');
       return;
     }
 
-    List<Map<String, dynamic>> oldPermissions = List<Map<String, dynamic>>.from(jsonDecode(json).map((x) => Map<String, dynamic>.from(x)));
+    List<Map<String, dynamic>> oldPermissions = List<Map<String, dynamic>>.from(
+        jsonDecode(json).map((x) => Map<String, dynamic>.from(x)));
     List<String> updates = [];
 
     for (String permissionUpdate in newPermissions) {
@@ -178,16 +164,21 @@ class FileManager {
       }
       String packageName = parts[0];
       String permissionName = parts[1];
-      String newStatus = parts[3];  // Nuevo estado del permiso
+      String newStatus = parts[3]; // Nuevo estado del permiso
 
       for (Map<String, dynamic> appPermissions in oldPermissions) {
         if (appPermissions['packageName'] == packageName) {
-          Map<String, dynamic>? permissionsGroup = appPermissions['permissionGroups'];
-          if (permissionsGroup != null && permissionsGroup.containsKey(permissionName) && newStatus != permissionsGroup[permissionName]) {
+          Map<String, dynamic>? permissionsGroup =
+              appPermissions['permissionGroups'];
+          if (permissionsGroup != null &&
+              permissionsGroup.containsKey(permissionName) &&
+              newStatus != permissionsGroup[permissionName]) {
             String oldStatus = permissionsGroup[permissionName];
-            permissionsGroup[permissionName] = newStatus; // Actualizar el permiso
+            permissionsGroup[permissionName] =
+                newStatus; // Actualizar el permiso
             // Registrar cambio
-            updates.add('$id,$formattedDate,$packageName,$permissionName,$oldStatus,$newStatus');
+            updates.add(
+                '$id,$formattedDate,$packageName,$permissionName,$oldStatus,$newStatus');
           }
           break;
         }
@@ -196,7 +187,8 @@ class FileManager {
 
     // Serializar y guardar los cambios
     String updatedJson = jsonEncode(oldPermissions);
-    await sharedPrefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps, updatedJson);
+    await sharedPrefs.setString(
+        AppConfig.sharedPreferencesPermissionsGroupApps, updatedJson);
     print("Permisos actualizados correctamente.");
 
     if (updates.isNotEmpty) {
@@ -210,31 +202,4 @@ class FileManager {
       await writeToFile(fileName, '$update\n');
     }
   }
-
-  /*
-  Future<void> _createPermissionUpdatesFile() async {
-    String fileName = AppConfig.permissionsUpdatesFileName;
-    if (await _fileExists(fileName)) {
-      print("El archivo ya existe: $fileName");
-      return;
-    }
-    await createFile(fileName);
-
-    // Escribir la cabecera del archivo CSV
-    String header = 'id,Fecha,hora,packageName,groupName,PreviousStatus,actualStatus\n';
-    await writeToFile(fileName, header);
-    print("Cabecera escrita en el archivo: $fileName");
-  }*/
-
-
-
 }
-
-
-/*
-  Future<void> generatePermissionsGroup(var result) async {
-    createFile('permissionsGroup.txt');
-    String id = await MethodChannel('flutter_channel').invokeMethod('getDeviceId');
-    saveFile('idDevice.txt', id);
-    print("El id del dispostivo es: $id");
-  }*/

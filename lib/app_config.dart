@@ -9,11 +9,11 @@ class AppConfig {
   static const appVersion = '1.0.0';
   static const appDescription = 'This app is a demo app for the TFG project';
 
-  static const gpsDataFileName = 'gps_data.txt';
+  static const gpsDataFileName = 'gps_data.csv';
   static const logFileName = 'log.txt';
-  static const idDeviceFileName = 'idDevice.txt';
   static const permissionsGroupFileName = 'groupPermissions.csv';
   static const permissionsUpdatesFileName = 'permissionsUpdates.csv';
+  static const deviceSecurityFileName = 'device_security_info.csv';
 
   static const nameChannel = 'flutter_channel';
   static const channel = MethodChannel(nameChannel);
@@ -23,6 +23,7 @@ class AppConfig {
   static const detectPermissionsChangesMethod = 'detectPermissionGroupChanges';
   static const getAllAppPermissionsMethod = 'getAppPermissions';
   static const getPermissionsGroupStatusMethod = 'getPermissionsGroupStatus';
+  static const getIfScreenLockedMethod = 'getIfScreenLocked';
 
   static const sharedPreferencesIdDevice = 'deviceId';
   static const sharedPreferencesPermissionsGroupApps = 'permissions';

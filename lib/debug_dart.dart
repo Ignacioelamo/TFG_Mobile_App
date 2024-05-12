@@ -1,19 +1,14 @@
 import 'app_config.dart';
 
-
-class DebugDart{
-
+class DebugDart {
   DebugDart._privateConstructor();
   static final DebugDart instance = DebugDart._privateConstructor();
-
-
-
-
 
   // Retrieves all permissions from all applications
   Future<void> getAppPermissions() async {
     try {
-      var result = await AppConfig.channel.invokeMethod(AppConfig.getAllAppPermissionsMethod);
+      var result = await AppConfig.channel
+          .invokeMethod(AppConfig.getAllAppPermissionsMethod);
 
       // Verificar si el resultado es una lista de mapas
       if (result is List) {
@@ -21,7 +16,8 @@ class DebugDart{
 
         // Recorrer la lista para imprimir información sobre cada aplicación
         for (var app in result) {
-          if (app is Map) { // Verificar que es un mapa
+          if (app is Map) {
+            // Verificar que es un mapa
             var appName = app["appName"] ?? "Desconocido";
             var packageName = app["packageName"] ?? "Desconocido";
             print("Aplicación: $appName ($packageName)\n");
@@ -56,8 +52,8 @@ class DebugDart{
   // Retrieves the permission group status from all applications
   Future<void> getPermissionsGroupStatus() async {
     try {
-      var result = await AppConfig.channel.invokeMethod(
-          AppConfig.getPermissionsGroupStatusMethod);
+      var result = await AppConfig.channel
+          .invokeMethod(AppConfig.getPermissionsGroupStatusMethod);
 
       // Verificar si el resultado es una lista de mapas
       if (result is List) {
@@ -78,8 +74,8 @@ class DebugDart{
 
               for (var permission in requestedPermissions) {
                 if (permission is Map) {
-                  var permissionName = permission["permissionName"] ??
-                      "Desconocido";
+                  var permissionName =
+                      permission["permissionName"] ?? "Desconocido";
                   var status = permission["status"] ?? "Desconocido";
                   print("- $permissionName: $status");
                 }

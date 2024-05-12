@@ -2,10 +2,12 @@ import 'package:permission_handler/permission_handler.dart';
 
 class PermissionManager {
   PermissionManager._privateConstructor();
-  static final PermissionManager instance = PermissionManager._privateConstructor();
+  static final PermissionManager instance =
+      PermissionManager._privateConstructor();
 
   Future<bool> requestPermissions() async {
-    final Map<Permission, PermissionStatus> status = await _requestStoragePermission();
+    final Map<Permission, PermissionStatus> status =
+        await _requestStoragePermission();
     final bool allGranted = _checkAllPermissionsGranted(status);
 
     if (!allGranted) {
@@ -24,6 +26,4 @@ class PermissionManager {
   bool _checkAllPermissionsGranted(Map<Permission, PermissionStatus> status) {
     return status.values.every((status) => status.isGranted);
   }
-
-
 }

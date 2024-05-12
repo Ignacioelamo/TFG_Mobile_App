@@ -6,9 +6,10 @@ import 'file_manager.dart';
 import 'app_config.dart';
 import 'package:gps_connectivity/gps_connectivity.dart';
 
-class SubscriptionManager{
+class SubscriptionManager {
   SubscriptionManager._privateConstructor();
-  static final SubscriptionManager instance = SubscriptionManager._privateConstructor();
+  static final SubscriptionManager instance =
+      SubscriptionManager._privateConstructor();
 
   //Global variables
   String? _lastGpsTime;
@@ -19,36 +20,38 @@ class SubscriptionManager{
 
   // Foreach subscription, the key is the subscription name and the value is the subscription status
   Map<String, bool> subscriptions = {};
-  void addSubscription(String subscriptionName){
+  void addSubscription(String subscriptionName) {
     subscriptions[subscriptionName] = false;
   }
 
-  void removeSubscription(String subscriptionName){
+  void removeSubscription(String subscriptionName) {
     subscriptions.remove(subscriptionName);
   }
 
-  void updateSubscription(String subscriptionName, bool status){
+  void updateSubscription(String subscriptionName, bool status) {
     subscriptions[subscriptionName] = status;
   }
 
-  bool isSubscribed(String subscriptionName){
+  bool isSubscribed(String subscriptionName) {
     return subscriptions[subscriptionName] ?? false;
   }
 
-  void clearSubscriptions(){
+  void clearSubscriptions() {
     subscriptions.clear();
   }
 
-  void subscribeToGpsChanges(){
-    try{
-      if (gpsSubscription == null){
-        gpsSubscription = GpsConnectivity().onGpsConnectivityChanged.listen((bool result) async{
+  void subscribeToGpsChanges() {
+    try {
+      if (gpsSubscription == null) {
+        gpsSubscription = GpsConnectivity()
+            .onGpsConnectivityChanged
+            .listen((bool result) async {
           print("Entro aquí");
           await saveGpsData(AppConfig.gpsDataFileName);
         });
         updateSubscription('gps', gpsSubscription != null);
       }
-    }catch(e){
+    } catch (e) {
       FileManager.instance.writeToFile(AppConfig.logFileName, e.toString());
     }
   }
@@ -63,8 +66,8 @@ class SubscriptionManager{
 
     String gpsInfo = '$formattedDate,$formattedTime,$gpsData\n';
 
-
-    if (_lastGpsTime != formattedTime && _lastGpsData != gpsData || _lastGpsTime == null){
+    if (_lastGpsTime != formattedTime && _lastGpsData != gpsData ||
+        _lastGpsTime == null) {
       _lastGpsTime = formattedTime;
       _lastGpsData = gpsData;
       await FileManager.instance.saveFile(fileName, gpsInfo);
@@ -72,5 +75,4 @@ class SubscriptionManager{
       return;
     }
   }
-
 }

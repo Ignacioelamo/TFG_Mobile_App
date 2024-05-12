@@ -1,15 +1,10 @@
 import 'dart:async';
 
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 import 'app_config.dart';
 import 'controller.dart';
-
-
-
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -36,7 +31,6 @@ class MyAppState extends State<MyApp> {
     });
   }
 
-
   Future<void> _createFiles() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -46,10 +40,9 @@ class MyAppState extends State<MyApp> {
       prefs.setBool('firstTime', false);
       await Controller.instance.createFiles();
       await Controller.instance.getAllAppsPermissionsGroup();
+      await Controller.instance.getScreenLockType();
     }
-
   }
-
 
   Future<void> _requestPermissions() async {
     bool granted = await Controller.instance.requestPermission();
@@ -58,7 +51,6 @@ class MyAppState extends State<MyApp> {
         _showPermissionDialog(context);
       }
     }
-
   }
 
   @override
@@ -146,8 +138,3 @@ class MyAppState extends State<MyApp> {
     );
   }
 }
-
-
-
-
-

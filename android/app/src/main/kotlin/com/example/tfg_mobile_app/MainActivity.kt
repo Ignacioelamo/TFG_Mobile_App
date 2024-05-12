@@ -7,6 +7,11 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import android.provider.Settings
 
+import android.app.KeyguardManager
+import android.content.Context
+import android.os.Build
+
+
 class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -36,12 +41,37 @@ class MainActivity : FlutterActivity() {
                     val permissions = getPermissionsGroupStatus()
                     result.success(permissions)
                 }
+                "getIfScreenLocked" -> {
+                    val screenLockType = getScreenLockType()
+                    result.success(screenLockType)
+                }
                 else -> {
                     result.notImplemented()
                 }
             }
         }
     }
+
+    // Retrieve if the device has a some kind of screen lock or not
+    private fun getScreenLockType(): Boolean {
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        return when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                when {
+                    keyguardManager.isDeviceSecure -> true
+                    else -> false
+                }
+            }
+            else -> {
+                when {
+                    keyguardManager.isKeyguardSecure -> true
+                    else -> false
+                }
+            }
+        }
+    }
+
+
 
     // Obtain permission group statuses for all installed applications
 
