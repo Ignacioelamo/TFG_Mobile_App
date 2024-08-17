@@ -74,11 +74,11 @@ class Controller {
 
     return deviceId;
   }
-
+/*
   Future<void> subscribeToGpsChanges() async {
     SubscriptionManager.instance.subscribeToGpsChanges();
   }
-
+*/
   Future<void> createFiles() async {
     FileManager.instance.createFile(AppConfig.gpsDataFileName);
     String id = await generateOrRetrieveDeviceId();

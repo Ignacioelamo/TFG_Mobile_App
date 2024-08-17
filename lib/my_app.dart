@@ -19,7 +19,7 @@ class MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions(); // Solicita los permisos utilizando PermissionManager
+    /*_requestPermissions(); // Solicita los permisos utilizando PermissionManager
     _createFiles(); // Crea los archivos de datos
 
     //Controller.instance.getAllAppsPermissionsOfTheApps();
@@ -28,7 +28,7 @@ class MyAppState extends State<MyApp> {
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
       print("Checking permissions changes...");
       await Controller.instance.detectAppsPermissionsChanges();
-    });
+    });*/
   }
 
   Future<void> _createFiles() async {
