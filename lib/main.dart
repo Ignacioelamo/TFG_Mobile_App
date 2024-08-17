@@ -8,6 +8,8 @@ import 'package:flutter_background_service_android/flutter_background_service_an
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tfg_mobile_app/file_manager.dart';
 import 'package:workmanager/workmanager.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 import 'controller.dart';
 import 'my_app.dart';
@@ -33,9 +35,18 @@ void callbackDispatcher() {
   });
 }
 
+//Pide permisos de notificaciones
+Future<void> _requestPermissions() async {
+  if (await Permission.notification.request().isDenied) {
+    await Permission.notification.request();
+  }
+}
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _requestPermissions();
 
   Workmanager().initialize(
       callbackDispatcher, // The top level function, aka callbackDispatcher
