@@ -151,23 +151,13 @@ class FileManager {
   }
 
   Future<void> updateOldGroupPermissions(List<String> newPermissions) async {
-    final sharedPrefs = await SharedPreferences.getInstance();
-    String? json =
-        sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
-    String? id = sharedPrefs.getString(AppConfig.sharedPreferencesIdDevice);
+    FileManager.instance.createFile(AppConfig.permissionsUpdatesFileName);
 
+    final id = "idPrueba";
     final DateTime now = DateTime.now();
     final DateFormat formatter = DateFormat('yyyy-MM-dd,HH:mm:ss');
     final String formattedDate = formatter.format(now);
 
-    if (json == null) {
-      FileManager.instance.writeToLog(
-          'No se encontraron permisos en el almacenamiento local');
-      return;
-    }
-
-    List<Map<String, dynamic>> oldPermissions = List<Map<String, dynamic>>.from(
-        jsonDecode(json).map((x) => Map<String, dynamic>.from(x)));
     List<String> updates = [];
 
     for (String permissionUpdate in newPermissions) {
@@ -177,44 +167,24 @@ class FileManager {
       }
       String packageName = parts[0];
       String permissionName = parts[1];
+      String oldStatus = parts[2]; // Estado anterior del permiso
       String newStatus = parts[3]; // Nuevo estado del permiso
 
-      for (Map<String, dynamic> appPermissions in oldPermissions) {
-        if (appPermissions['packageName'] == packageName) {
-          Map<String, dynamic>? permissionsGroup =
-              appPermissions['permissionGroups'];
-          if (permissionsGroup != null &&
-              permissionsGroup.containsKey(permissionName) &&
-              newStatus != permissionsGroup[permissionName]) {
-            String oldStatus = permissionsGroup[permissionName];
-            permissionsGroup[permissionName] =
-                newStatus; // Actualizar el permiso
-            // Registrar cambio
-            updates.add(
-                '$id,$formattedDate,$packageName,$permissionName,$oldStatus,$newStatus');
-          }
-          break;
-        }
-      }
-    }
-
-    // Serializar y guardar los cambios
-    String updatedJson = jsonEncode(oldPermissions);
-    await sharedPrefs.setString(
-        AppConfig.sharedPreferencesPermissionsGroupApps, updatedJson);
-    if (kDebugMode) {
-      print("Permisos actualizados correctamente.");
+      // Registrar el cambio
+      updates.add(
+          '$id,$formattedDate,$packageName,$permissionName,$oldStatus,$newStatus');
     }
 
     if (updates.isNotEmpty) {
-      _updatePermissionUpdatesFile(updates);
+      await _updatePermissionUpdatesFile(updates);
     }
   }
 
   Future<void> _updatePermissionUpdatesFile(List<String> updates) async {
-    String fileName = AppConfig.permissionsUpdatesFileName;
+
+
     for (String update in updates) {
-      await writeToFile(fileName, '$update\n');
+      await FileManager.instance.writeToFile(AppConfig.permissionsUpdatesFileName, '$update\n');
     }
   }
 }

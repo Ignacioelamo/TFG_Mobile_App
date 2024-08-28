@@ -145,6 +145,8 @@ class Controller {
     changes.forEach(print);
 
     FileManager.instance.updateOldGroupPermissions(changes);
+    prefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps,
+        jsonActualPermiso);
     return Future.value(true);
   }
 }
