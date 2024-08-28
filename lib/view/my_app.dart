@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_config.dart';
-import 'controller.dart';
+import '../config/app_config.dart';
+import '../controller/controller.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -39,11 +39,11 @@ class MyAppState extends State<MyApp> {
     if (isFirstTime) {
       prefs.setBool('firstTime', false);
       await Controller.instance.createFiles();
-      await Controller.instance.getAllAppsPermissionsGroup();
-      await Controller.instance.getScreenLockType();
+      //await Controller.instance.getScreenLockType();
     }
   }
 
+  /*
   Future<void> _requestPermissions() async {
     bool granted = await Controller.instance.requestPermission();
     if (!granted) {
@@ -51,7 +51,7 @@ class MyAppState extends State<MyApp> {
         _showPermissionDialog(context);
       }
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -75,9 +75,12 @@ class MyAppState extends State<MyApp> {
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
-              await Controller.instance.openFile(AppConfig.gpsDataFileName);
+             await Controller.instance.handleDetectPermissionsChangesTask();
+
             },
             child: const Text('Open File'),
+            //al pulsar el botón se abrirá el archivo de datos
+
           ),
         ),
       ),
@@ -109,7 +112,7 @@ class MyAppState extends State<MyApp> {
               child: const Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop();
-                await Controller.instance.clearFile(AppConfig.gpsDataFileName);
+                //await Controller.instance.clearFile(AppConfig.gpsDataFileName);
               },
             ),
           ],
@@ -129,7 +132,7 @@ class MyAppState extends State<MyApp> {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              _requestPermissions();
+              //_requestPermissions();
             },
             child: const Text('OK'),
           ),

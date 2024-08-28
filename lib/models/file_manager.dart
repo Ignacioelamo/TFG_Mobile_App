@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
-import 'package:open_file/open_file.dart';
-import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'app_config.dart';
+import '../config/app_config.dart';
 
 class FileManager {
   FileManager._privateConstructor();
@@ -25,6 +25,13 @@ class FileManager {
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     await file.writeAsString(content, mode: FileMode.append);
+  }
+
+  Future<void> writeToLog(String content) async {
+    if (await _fileExists(AppConfig.logFileName) == false) {
+      await createFile(AppConfig.logFileName);
+    }
+    await writeToFile(AppConfig.logFileName, content);
   }
 
   Future<String> readFromFile(String fileName) async {
@@ -49,7 +56,9 @@ class FileManager {
 
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
-    print('Creating file: $filePath');
+    if (kDebugMode) {
+      print('Creating file: $filePath');
+    }
     await file.create();
   }
 
@@ -114,14 +123,15 @@ class FileManager {
       for (var permission in AppConfig.instance.permissionGroups) {
         var row = permission;
         for (var app in result) {
-          var permissionStatus =
-              (app['permissionGroups'] as Map)[permission] ?? 'Not requested';
+          var permissionStatus = (app['permissionGroups'] as Map)[permission];
           row += ',$permissionStatus';
         }
         await writeToFile('groupPermissions.csv', '$row\n');
       }
     } else {
-      print("El archivo ya existe");
+      if (kDebugMode) {
+        print("El archivo ya existe");
+      }
     }
   }
 
@@ -130,7 +140,9 @@ class FileManager {
     String? json =
         sharedPrefs.getString(AppConfig.sharedPreferencesPermissionsGroupApps);
     if (json == null) {
-      print('No se encontraron permisos en el almacenamiento local');
+      if (kDebugMode) {
+        print('No se encontraron permisos en el almacenamiento local');
+      }
       return [];
     } else {
       return List<Map<String, dynamic>>.from(
@@ -149,7 +161,8 @@ class FileManager {
     final String formattedDate = formatter.format(now);
 
     if (json == null) {
-      print('No se encontraron permisos en el almacenamiento local');
+      FileManager.instance.writeToLog(
+          'No se encontraron permisos en el almacenamiento local');
       return;
     }
 
@@ -189,7 +202,9 @@ class FileManager {
     String updatedJson = jsonEncode(oldPermissions);
     await sharedPrefs.setString(
         AppConfig.sharedPreferencesPermissionsGroupApps, updatedJson);
-    print("Permisos actualizados correctamente.");
+    if (kDebugMode) {
+      print("Permisos actualizados correctamente.");
+    }
 
     if (updates.isNotEmpty) {
       _updatePermissionUpdatesFile(updates);

@@ -1,7 +1,8 @@
-import 'app_config.dart';
+import '../config/app_config.dart';
 
 class DebugDart {
   DebugDart._privateConstructor();
+
   static final DebugDart instance = DebugDart._privateConstructor();
 
   // Retrieves all permissions from all applications
