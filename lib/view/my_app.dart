@@ -1,10 +1,5 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../config/app_config.dart';
-import '../controller/controller.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -14,44 +9,10 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
-  late Timer _timer;
-
   @override
   void initState() {
     super.initState();
-    /*_requestPermissions(); // Solicita los permisos utilizando PermissionManager
-    _createFiles(); // Crea los archivos de datos
-
-    //Controller.instance.getAllAppsPermissionsOfTheApps();
-    //Controller.instance.getPermissions();
-    //Controller.instance.requestAppsPermissions();
-    _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) async {
-      print("Checking permissions changes...");
-      await Controller.instance.detectAppsPermissionsChanges();
-    });*/
   }
-
-  Future<void> _createFiles() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    bool isFirstTime = prefs.getBool('firstTime') ?? true;
-
-    if (isFirstTime) {
-      prefs.setBool('firstTime', false);
-      await Controller.instance.createFiles();
-      //await Controller.instance.getScreenLockType();
-    }
-  }
-
-  /*
-  Future<void> _requestPermissions() async {
-    bool granted = await Controller.instance.requestPermission();
-    if (!granted) {
-      if (mounted) {
-        _showPermissionDialog(context);
-      }
-    }
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +36,9 @@ class MyAppState extends State<MyApp> {
         body: Center(
           child: ElevatedButton(
             onPressed: () async {
-             await Controller.instance.handleDetectPermissionsChangesTask();
-
+              //await Controller.instance._handleDetectPermissionsChangesTask();
             },
             child: const Text('Open File'),
-            //al pulsar el botón se abrirá el archivo de datos
-
           ),
         ),
       ),
@@ -118,26 +76,6 @@ class MyAppState extends State<MyApp> {
           ],
         );
       },
-    );
-  }
-
-  void _showPermissionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Permisos requeridos'),
-        content: const Text('Por favor, concede los permisos para continuar.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              //_requestPermissions();
-            },
-            child: const Text('OK'),
-          ),
-        ],
-      ),
     );
   }
 }

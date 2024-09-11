@@ -1,5 +1,3 @@
-import 'package:flutter/services.dart';
-
 class AppConfig {
   AppConfig._privateConstructor();
 
@@ -15,18 +13,9 @@ class AppConfig {
   static const permissionsUpdatesFileName = 'permissionsUpdates.csv';
   static const deviceSecurityFileName = 'device_security_info.csv';
 
-  static const nameChannel = 'flutter_channel';
-  static const channel = MethodChannel(nameChannel);
-
-  static const getAppPermissionStatusesMethod = 'getAppPermissionStatuses';
-  static const getDeviceIdMethod = 'retrieveDeviceID';
-  static const detectPermissionsChangesMethod = 'detectPermissionGroupChanges';
-  static const getAllAppPermissionsMethod = 'getAppPermissions';
-  static const getPermissionsGroupStatusMethod = 'getPermissionsGroupStatus';
-  static const getIfScreenLockedMethod = 'getIfScreenLocked';
-
   static const sharedPreferencesIdDevice = 'deviceId';
   static const sharedPreferencesPermissionsGroupApps = 'permissions';
+  static const sharedPreferencesGpsStatus = 'gpsStatus';
 
   final List<String> permissionGroups = [
     "ACTIVITY_RECOGNITION",
