@@ -17,13 +17,13 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'File Creation App',
+      title: 'TFG MOBILE APP',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('File Creation App'),
+          title: const Text('TFG MOBILE APP'),
           actions: <Widget>[
             IconButton(
               icon: const Icon(Icons.delete),
@@ -38,7 +38,7 @@ class MyAppState extends State<MyApp> {
             onPressed: () async {
               //await Controller.instance._handleDetectPermissionsChangesTask();
             },
-            child: const Text('Open File'),
+            child: const Text('Botón que no hace nada'),
           ),
         ),
       ),
