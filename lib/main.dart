@@ -47,14 +47,11 @@ void main() async {
       initialDelay: const Duration(seconds: 10));
 
 
-
-
-
   // Register a periodic task with Workmanager.
   Workmanager().registerPeriodicTask(
       "DetectAppPermissionsChanges", "detect_app_permissions_changes_task",
       initialDelay: const Duration(seconds: 60),
-      frequency: const Duration(minutes: 15));
+      frequency: const Duration(minutes: 20));
 
   Workmanager().registerPeriodicTask(
       "DetectGpsStatusChanges", "detect_gps_status_changes_task",

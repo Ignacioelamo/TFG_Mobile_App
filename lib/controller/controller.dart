@@ -207,6 +207,9 @@ class Controller {
     // Log the detected changes.
     changes.forEach(print);
 
+    if (changes.isEmpty) {
+      return true;
+    }
     // Update the old group permissions file with the detected changes.
     await FileManager.instance.updateOldGroupPermissions(changes);
 
