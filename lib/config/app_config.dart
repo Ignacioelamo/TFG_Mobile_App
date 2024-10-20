@@ -16,6 +16,7 @@ class AppConfig {
   static const sharedPreferencesIdDevice = 'deviceId';
   static const sharedPreferencesPermissionsGroupApps = 'permissions';
   static const sharedPreferencesGpsStatus = 'gpsStatus';
+  static const sharedPreferencesDeviceSecurity = 'deviceSecurity';
 
   final List<String> permissionGroups = [
     "ACTIVITY_RECOGNITION",

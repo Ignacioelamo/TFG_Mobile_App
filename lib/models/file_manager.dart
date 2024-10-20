@@ -17,6 +17,8 @@ class FileManager {
 
   static final FileManager instance = FileManager._privateConstructor();
 
+
+
   Future<String> getFilePath(String fileName) async {
     Directory? appDocDir = await getExternalStorageDirectory();
     String? appDocPath = appDocDir?.path;
@@ -30,7 +32,7 @@ class FileManager {
   }
 
   Future<void> writeToLog(String content) async {
-    if (await _fileExists(AppConfig.logFileName) == false) {
+    if (await fileExists(AppConfig.logFileName) == false) {
       await createFile(AppConfig.logFileName);
     }
     await writeToFile(AppConfig.logFileName, content);
@@ -48,7 +50,7 @@ class FileManager {
   }
 
   Future<void> createFile(String fileName) async {
-    if (await _fileExists(fileName)) {
+    if (await fileExists(fileName)) {
       return;
     }
 
@@ -88,7 +90,7 @@ class FileManager {
     }
   }
 
-  Future<bool> _fileExists(String fileName) async {
+  Future<bool> fileExists(String fileName) async {
     String filePath = await getFilePath(fileName);
     File file = File(filePath);
     return file.exists();
@@ -105,7 +107,7 @@ class FileManager {
   /// \return A Future that completes when the permissions group file has been generated.
   Future<void> generatePermissionsGroup(List<dynamic> result) async {
     // Check if the permissions group file exists.
-    if (!await _fileExists(AppConfig.permissionsGroupFileName)) {
+    if (!await fileExists(AppConfig.permissionsGroupFileName)) {
       // Get shared preferences instance and save the permissions data as a JSON string.
       final sharedPrefs = await SharedPreferences.getInstance();
       final json = jsonEncode(result);
@@ -244,6 +246,13 @@ class FileManager {
   Future<bool> _getScreenLockStatus() async {
     try {
       // Initialize local authentication.
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final deviceInfo = prefs.getBool(AppConfig.sharedPreferencesDeviceSecurity);
+      //Si existe el archivo no hacemos nada y devolvemos true
+      if (deviceInfo == true) {
+        return true;
+      }
+
       final localAuth = LocalAuthentication();
 
       bool canCheckBiometrics = await localAuth.canCheckBiometrics;
@@ -261,6 +270,11 @@ class FileManager {
       // Write the results to a file.
       await FileManager.instance
           .writeToFile(AppConfig.deviceSecurityFileName, content);
+
+      prefs.setBool(AppConfig.sharedPreferencesDeviceSecurity, true);
+
+      // Define a constant ID and get the current date and time.
+
       return true;
     } catch (e) {
       return false;

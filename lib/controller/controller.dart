@@ -68,6 +68,17 @@ class Controller {
   /// This function initializes the creation of several files required by the application.
   /// Each file is created with a specific header to ensure proper formatting and data structure.
   Future<bool> _createAppFiles() async {
+
+    //Si el archivo ya existe, no hacemos nada  y retornamos true
+    if (await FileManager.instance.fileExists(AppConfig.gpsDataFileName) &&
+        await FileManager.instance.fileExists(AppConfig.logFileName) &&
+        await FileManager.instance
+            .fileExists(AppConfig.permissionsUpdatesFileName) &&
+        await FileManager.instance
+            .fileExists(AppConfig.deviceSecurityFileName)) {
+      return Future.value(true);
+    }
+
     // Instance of FileManager to handle file operations.
     final fileManager = FileManager.instance;
     final SharedPreferences prefs = await SharedPreferences.getInstance();
