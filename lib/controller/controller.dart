@@ -37,7 +37,6 @@ class Controller {
     }
   }
 
-
   /// Retrieves the device ID and stores it in shared preferences.
   ///
   /// This function uses the `AppPermissionsMonitor` to get the device ID and then
@@ -50,7 +49,6 @@ class Controller {
     await prefs.setString(AppConfig.sharedPreferencesIdDevice, id!);
     return true;
   }
-
 
   /// Writes static data including device ID and screen lock status.
   ///
@@ -68,7 +66,6 @@ class Controller {
   /// This function initializes the creation of several files required by the application.
   /// Each file is created with a specific header to ensure proper formatting and data structure.
   Future<bool> _createAppFiles() async {
-
     //Si el archivo ya existe, no hacemos nada  y retornamos true
     if (await FileManager.instance.fileExists(AppConfig.gpsDataFileName) &&
         await FileManager.instance.fileExists(AppConfig.logFileName) &&

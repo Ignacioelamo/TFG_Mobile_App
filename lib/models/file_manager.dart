@@ -17,8 +17,6 @@ class FileManager {
 
   static final FileManager instance = FileManager._privateConstructor();
 
-
-
   Future<String> getFilePath(String fileName) async {
     Directory? appDocDir = await getExternalStorageDirectory();
     String? appDocPath = appDocDir?.path;
@@ -172,7 +170,6 @@ class FileManager {
   ///        'packageName,permissionName,oldStatus,newStatus'.
   /// \return A Future that completes when the permissions have been updated.
   Future<void> updateOldGroupPermissions(List<String> newPermissions) async {
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     // Define a constant ID and get the current date and time.
@@ -247,7 +244,8 @@ class FileManager {
     try {
       // Initialize local authentication.
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      final deviceInfo = prefs.getBool(AppConfig.sharedPreferencesDeviceSecurity);
+      final deviceInfo =
+          prefs.getBool(AppConfig.sharedPreferencesDeviceSecurity);
       //Si existe el archivo no hacemos nada y devolvemos true
       if (deviceInfo == true) {
         return true;
@@ -257,8 +255,6 @@ class FileManager {
 
       bool canCheckBiometrics = await localAuth.canCheckBiometrics;
       bool isDeviceSecure = await localAuth.isDeviceSupported();
-
-
 
       final biometricAuth = canCheckBiometrics && isDeviceSecure ? 'Yes' : 'No';
 
@@ -280,5 +276,4 @@ class FileManager {
       return false;
     }
   }
-
 }
