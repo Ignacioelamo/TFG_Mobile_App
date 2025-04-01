@@ -1,3 +1,5 @@
+import 'secrets.dart';
+
 class AppConfig {
   AppConfig._privateConstructor();
 
@@ -35,4 +37,8 @@ class AppConfig {
     "SMS",
     "STORAGE"
   ];
+
+  // URL y credenciales de acceso supabase
+  static const supabaseUrl = Secrets.supabaseUrl;
+  static const supabaseAnonKey = Secrets.supabaseAnonKey;
 }
