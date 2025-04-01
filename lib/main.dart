@@ -57,6 +57,11 @@ void main() async {
     // Considera mostrar un mensaje de error amigable aquí
   }
 
+  // Inicializar contenedor de inyección de dependencias
+  await di.init();
+  await FileManager.instance.writeToLog(
+      "[App] Contenedor de inyección de dependencias inicializado\n");
+
   // Intentar registrar el dispositivo
   try {
     final prefs = await SharedPreferences.getInstance();
