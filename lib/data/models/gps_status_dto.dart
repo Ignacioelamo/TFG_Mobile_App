@@ -8,13 +8,15 @@ class GpsStatusDto {
   final String? id;
   final String deviceId;
   final String status;
-  final DateTime recordedAt;
+  final DateTime startTime;
+  final DateTime? endTime;
 
   GpsStatusDto({
     this.id,
     required this.deviceId,
     required this.status,
-    required this.recordedAt,
+    required this.startTime,
+    this.endTime,
   });
 
   /// Crea un GpsStatusDto a partir de un JSON
@@ -23,9 +25,11 @@ class GpsStatusDto {
       id: json['id'],
       deviceId: json['device_id'],
       status: json['status'],
-      recordedAt: json['recorded_at'] != null
-          ? DateTime.parse(json['recorded_at'])
+      startTime: json['start_time'] != null
+          ? DateTime.parse(json['start_time'])
           : DateTime.now(),
+      endTime:
+          json['end_time'] != null ? DateTime.parse(json['end_time']) : null,
     );
   }
 
@@ -34,11 +38,15 @@ class GpsStatusDto {
     final Map<String, dynamic> data = <String, dynamic>{
       'device_id': deviceId,
       'status': status,
-      'recorded_at': recordedAt.toIso8601String(),
+      'start_time': startTime.toIso8601String(),
     };
 
     if (id != null) {
       data['id'] = id;
+    }
+
+    if (endTime != null) {
+      data['end_time'] = endTime!.toIso8601String();
     }
 
     return data;
@@ -50,7 +58,8 @@ class GpsStatusDto {
       id: id,
       deviceId: deviceId,
       status: status,
-      recordedAt: recordedAt,
+      startTime: startTime,
+      endTime: endTime,
     );
   }
 
@@ -60,7 +69,8 @@ class GpsStatusDto {
       id: status.id,
       deviceId: status.deviceId,
       status: status.status,
-      recordedAt: status.recordedAt,
+      startTime: status.startTime,
+      endTime: status.endTime,
     );
   }
 }

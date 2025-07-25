@@ -6,18 +6,22 @@ class GpsStatus {
   /// Dispositivo al que pertenece este estado
   final String deviceId;
 
-  /// Estado del GPS (enabled, disabled, unknown)
+  /// Estado del GPS (ON, OFF)
   final String status;
 
-  /// Fecha y hora de registro
-  final DateTime recordedAt;
+  /// Fecha y hora de inicio del estado
+  final DateTime startTime;
+
+  /// Fecha y hora de fin del estado (null si es el estado actual)
+  final DateTime? endTime;
 
   /// Constructor
   GpsStatus({
     this.id,
     required this.deviceId,
     required this.status,
-    required this.recordedAt,
+    required this.startTime,
+    this.endTime,
   });
 
   /// Crea una copia del objeto con algunos campos modificados
@@ -25,25 +29,36 @@ class GpsStatus {
     String? id,
     String? deviceId,
     String? status,
-    DateTime? recordedAt,
+    DateTime? startTime,
+    DateTime? endTime,
   }) {
     return GpsStatus(
       id: id ?? this.id,
       deviceId: deviceId ?? this.deviceId,
       status: status ?? this.status,
-      recordedAt: recordedAt ?? this.recordedAt,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
     );
   }
 
   /// Verifica si el GPS está habilitado
-  bool get isEnabled => status == 'enabled';
+  bool get isEnabled => status == 'ON';
 
   /// Verifica si el GPS está deshabilitado
-  bool get isDisabled => status == 'disabled';
+  bool get isDisabled => status == 'OFF';
+
+  /// Verifica si este es el estado actual (sin fecha de fin)
+  bool get isCurrent => endTime == null;
+
+  /// Obtiene la duración del estado (null si es el estado actual)
+  Duration? get duration {
+    if (endTime == null) return null;
+    return endTime!.difference(startTime);
+  }
 
   @override
   String toString() {
-    return 'GpsStatus(id: $id, deviceId: $deviceId, status: $status, recordedAt: $recordedAt)';
+    return 'GpsStatus(id: $id, deviceId: $deviceId, status: $status, startTime: $startTime, endTime: $endTime)';
   }
 
   @override
@@ -53,7 +68,8 @@ class GpsStatus {
         other.id == id &&
         other.deviceId == deviceId &&
         other.status == status &&
-        other.recordedAt == recordedAt;
+        other.startTime == startTime &&
+        other.endTime == endTime;
   }
 
   @override
@@ -61,6 +77,7 @@ class GpsStatus {
     return id.hashCode ^
         deviceId.hashCode ^
         status.hashCode ^
-        recordedAt.hashCode;
+        startTime.hashCode ^
+        endTime.hashCode;
   }
 }
