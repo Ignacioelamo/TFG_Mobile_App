@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../models/file_manager.dart';
+import '../domain/entities/gps_status.dart';
+import '../domain/repositories/gps_repository.dart';
+import '../injection_container.dart' as di;
 
 class Controller {
   Controller._privateConstructor();
@@ -238,22 +241,41 @@ class Controller {
           prefs.getString(AppConfig.sharedPreferencesGpsStatus) ?? 'unknown';
 
       final isGpsEnabled = await AppPermissionsMonitor().getLocationStatus();
-      final currentGpsStatus = isGpsEnabled! ? 'enabled' : 'disabled';
+      final currentGpsStatus = isGpsEnabled! ? 'ON' : 'OFF';
 
       if (lastGpsStatus != currentGpsStatus) {
         await prefs.setString(
             AppConfig.sharedPreferencesGpsStatus, currentGpsStatus);
 
+        final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+
+        // Crear una entidad GpsStatus para guardar en la base de datos
+        final gpsStatus = GpsStatus(
+          deviceId: deviceId!,
+          status: currentGpsStatus,
+          startTime: DateTime.now(),
+        );
+
+        // Obtener la instancia del repositorio usando la inyección de dependencias
+        final gpsRepository = di.sl<GpsRepository>();
+
+        // Guardar el nuevo estado
+        await gpsRepository.saveGpsStatus(gpsStatus);
+
+        // También guardar en el archivo local para compatibilidad
         final now = DateTime.now();
         final formattedDate = '${now.year}-${now.month}-${now.day}';
         final formattedTime = '${now.hour}:${now.minute}:${now.second}';
         final content = '$formattedDate,$formattedTime,$currentGpsStatus\n';
         await FileManager.instance
             .writeToFile(AppConfig.gpsDataFileName, content);
+
+        await FileManager.instance
+            .writeToLog("[GPS] Estado actualizado a: $currentGpsStatus\n");
       }
       return true;
     } catch (e) {
-      await FileManager.instance.writeToLog("$e");
+      await FileManager.instance.writeToLog("[GPS] Error: $e\n");
       return false;
     }
   }

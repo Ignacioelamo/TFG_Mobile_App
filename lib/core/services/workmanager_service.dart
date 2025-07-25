@@ -1,5 +1,8 @@
 import 'package:workmanager/workmanager.dart';
 import '../../controller/controller.dart';
+import '../../injection_container.dart' as di;
+import '../../models/file_manager.dart';
+import '../services/supabase_service.dart';
 
 /// Servicio encargado de la gestión de tareas en segundo plano con Workmanager
 class WorkmanagerService {
@@ -48,6 +51,24 @@ class WorkmanagerService {
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    return await Controller.instance.handleWorkmanagerTask(task);
+    try {
+      // Inicializar las dependencias en el contexto del aislado
+      await FileManager.instance
+          .writeToLog("[WorkManager] Inicializando dependencias en aislado\n");
+
+      await SupabaseService.initialize();
+
+      await di.init();
+
+      await FileManager.instance
+          .writeToLog("[WorkManager] Dependencias inicializadas en aislado\n");
+
+      // Ejecutar la tarea
+      return await Controller.instance.handleWorkmanagerTask(task);
+    } catch (e) {
+      await FileManager.instance
+          .writeToLog("[WorkManager] Error en callbackDispatcher: $e\n");
+      return false;
+    }
   });
 }
