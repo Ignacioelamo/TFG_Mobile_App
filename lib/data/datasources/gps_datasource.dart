@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/gps_status_dto.dart';
+import '../../models/file_manager.dart';
 
 /// Interfaz que define las operaciones de datos para estados de GPS
 abstract class GpsDataSource {
@@ -34,11 +35,12 @@ class SupabaseGpsDataSource implements GpsDataSource {
       await closeCurrentGpsStatus(status.deviceId);
 
       // Luego insertamos el nuevo estado
-      await _client.from(_tableName).insert(status.toJson());
 
+      final response = await _client.from(_tableName).insert(status.toJson());
       return true;
     } catch (e) {
-      print('Error guardando estado de GPS: $e');
+      await FileManager.instance.writeToLog(
+          "[SupabaseGpsDataSource] ERROR guardando estado de GPS: $e\n");
       return false;
     }
   }
@@ -49,7 +51,7 @@ class SupabaseGpsDataSource implements GpsDataSource {
       final now = DateTime.now().toIso8601String();
 
       // Actualizar todos los registros activos (con end_time = null)
-      await _client
+      final response = await _client
           .from(_tableName)
           .update({'end_time': now})
           .eq('device_id', deviceId)
@@ -57,7 +59,8 @@ class SupabaseGpsDataSource implements GpsDataSource {
 
       return true;
     } catch (e) {
-      print('Error cerrando estado actual de GPS: $e');
+      await FileManager.instance.writeToLog(
+          "[SupabaseGpsDataSource] ERROR cerrando estado actual: $e\n");
       return false;
     }
   }
@@ -89,7 +92,8 @@ class SupabaseGpsDataSource implements GpsDataSource {
 
       return GpsStatusDto.fromJson(response);
     } catch (e) {
-      print('Error obteniendo último estado de GPS: $e');
+      await FileManager.instance.writeToLog(
+          "[SupabaseGpsDataSource] Error obteniendo último estado de GPS: $e\n");
       return null;
     }
   }
@@ -109,7 +113,8 @@ class SupabaseGpsDataSource implements GpsDataSource {
           .map((json) => GpsStatusDto.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error obteniendo historial de estados de GPS: $e');
+      await FileManager.instance.writeToLog(
+          "[SupabaseGpsDataSource] Error obteniendo historial de estados de GPS: $e\n");
       return [];
     }
   }
