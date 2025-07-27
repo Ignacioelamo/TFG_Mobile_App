@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import '../core/services/auth_service.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -11,6 +12,23 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> {
+  String? _username;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await AuthService.getUserInfo();
+    if (userInfo != null && mounted) {
+      setState(() {
+        _username = userInfo['username'];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,13 +41,39 @@ class MyAppState extends State<MyApp> {
               _showConfirmationDialog(context);
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await AuthService.logout();
+              if (context.mounted) {
+                Navigator.of(context).pushReplacementNamed('/');
+              }
+            },
+          ),
         ],
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: _openFileDirectory,
-          child: const Text('Ver archivos guardados'),
-        ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (_username != null)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Bienvenido, $_username',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          const SizedBox(height: 20),
+          Center(
+            child: ElevatedButton(
+              onPressed: _openFileDirectory,
+              child: const Text('Ver archivos guardados'),
+            ),
+          ),
+        ],
       ),
     );
   }
