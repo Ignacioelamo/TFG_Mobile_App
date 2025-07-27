@@ -9,14 +9,18 @@ class SecurityInfoDto {
   final String deviceId;
   final bool biometricAuthEnabled;
   final bool lockScreenEnabled;
-  final DateTime recordedAt;
+  final LockScreenType? lockScreenType;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   SecurityInfoDto({
     this.id,
     required this.deviceId,
     required this.biometricAuthEnabled,
     required this.lockScreenEnabled,
-    required this.recordedAt,
+    this.lockScreenType,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   /// Crea un SecurityInfoDto a partir de un JSON
@@ -26,8 +30,12 @@ class SecurityInfoDto {
       deviceId: json['device_id'],
       biometricAuthEnabled: json['biometric_auth_enabled'] as bool,
       lockScreenEnabled: json['lock_screen_enabled'] as bool,
-      recordedAt: json['recorded_at'] != null
-          ? DateTime.parse(json['recorded_at'])
+      lockScreenType: lockScreenTypeFromString(json['lock_screen_type']),
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
           : DateTime.now(),
     );
   }
@@ -38,11 +46,16 @@ class SecurityInfoDto {
       'device_id': deviceId,
       'biometric_auth_enabled': biometricAuthEnabled,
       'lock_screen_enabled': lockScreenEnabled,
-      'recorded_at': recordedAt.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
     };
 
     if (id != null) {
       data['id'] = id;
+    }
+
+    if (lockScreenType != null) {
+      data['lock_screen_type'] = lockScreenTypeToString(lockScreenType);
     }
 
     return data;
@@ -55,7 +68,9 @@ class SecurityInfoDto {
       deviceId: deviceId,
       biometricAuthEnabled: biometricAuthEnabled,
       lockScreenEnabled: lockScreenEnabled,
-      recordedAt: recordedAt,
+      lockScreenType: lockScreenType,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
     );
   }
 
@@ -66,7 +81,9 @@ class SecurityInfoDto {
       deviceId: securityInfo.deviceId,
       biometricAuthEnabled: securityInfo.biometricAuthEnabled,
       lockScreenEnabled: securityInfo.lockScreenEnabled,
-      recordedAt: securityInfo.recordedAt,
+      lockScreenType: securityInfo.lockScreenType,
+      createdAt: securityInfo.createdAt,
+      updatedAt: securityInfo.updatedAt,
     );
   }
 }

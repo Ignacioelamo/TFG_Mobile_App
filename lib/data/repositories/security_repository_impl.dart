@@ -21,12 +21,4 @@ class SecurityRepositoryImpl implements SecurityRepository {
     final dto = await _dataSource.getLastSecurityInfo(deviceId);
     return dto?.toEntity();
   }
-
-  @override
-  Future<List<SecurityInfo>> getSecurityInfoHistory(String deviceId,
-      {int limit = 10}) async {
-    final dtos =
-        await _dataSource.getSecurityInfoHistory(deviceId, limit: limit);
-    return dtos.map((dto) => dto.toEntity()).toList();
-  }
 }

@@ -12,11 +12,4 @@ abstract class SecurityRepository {
   ///
   /// [deviceId] es el ID único del dispositivo
   Future<SecurityInfo?> getLastSecurityInfo(String deviceId);
-
-  /// Obtiene el historial de información de seguridad para un dispositivo
-  ///
-  /// [deviceId] es el ID único del dispositivo
-  /// [limit] es el número máximo de registros a obtener
-  Future<List<SecurityInfo>> getSecurityInfoHistory(String deviceId,
-      {int limit = 10});
 }
