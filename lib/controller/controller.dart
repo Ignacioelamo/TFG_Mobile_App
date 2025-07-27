@@ -275,7 +275,7 @@ class Controller {
         final gpsRepository = di.sl<GpsRepository>();
 
         // Guardar el nuevo estado
-        final saveResult = await gpsRepository.saveGpsStatus(gpsStatus);
+        await gpsRepository.saveGpsStatus(gpsStatus);
 
         // También guardar en el archivo local para compatibilidad
         final now = DateTime.now();
