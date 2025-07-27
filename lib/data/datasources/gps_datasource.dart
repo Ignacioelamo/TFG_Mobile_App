@@ -35,8 +35,7 @@ class SupabaseGpsDataSource implements GpsDataSource {
       await closeCurrentGpsStatus(status.deviceId);
 
       // Luego insertamos el nuevo estado
-
-      final response = await _client.from(_tableName).insert(status.toJson());
+      await _client.from(_tableName).insert(status.toJson());
       return true;
     } catch (e) {
       await FileManager.instance.writeToLog(
@@ -51,7 +50,7 @@ class SupabaseGpsDataSource implements GpsDataSource {
       final now = DateTime.now().toIso8601String();
 
       // Actualizar todos los registros activos (con end_time = null)
-      final response = await _client
+      await _client
           .from(_tableName)
           .update({'end_time': now})
           .eq('device_id', deviceId)
