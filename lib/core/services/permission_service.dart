@@ -1,6 +1,5 @@
 import 'package:permission_handler/permission_handler.dart';
 import '../../models/file_manager.dart';
-import 'package:flutter/foundation.dart';
 
 /// Servicio encargado de la gestión de permisos de la aplicación
 class PermissionService {
