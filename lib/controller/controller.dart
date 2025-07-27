@@ -7,6 +7,7 @@ import '../config/app_config.dart';
 import '../models/file_manager.dart';
 import '../domain/entities/gps_status.dart';
 import '../domain/repositories/gps_repository.dart';
+import '../domain/repositories/device_repository.dart';
 import '../injection_container.dart' as di;
 
 class Controller {
@@ -215,9 +216,6 @@ class Controller {
     await prefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps,
         jsonEncode(actualPermissions));
 
-    // Log the detected changes.
-    changes.forEach(print);
-
     if (changes.isEmpty) {
       return true;
     }
@@ -236,6 +234,9 @@ class Controller {
   /// \return A Future that resolves to a boolean indicating the success of the task.
   Future<bool> _handleDetectGpsStatusChangesTask() async {
     try {
+      await FileManager.instance.writeToLog(
+          "[GPS_DEBUG] Iniciando tarea de detección de cambios en GPS\n");
+
       final prefs = await SharedPreferences.getInstance();
       final lastGpsStatus =
           prefs.getString(AppConfig.sharedPreferencesGpsStatus) ?? 'unknown';
@@ -243,15 +244,29 @@ class Controller {
       final isGpsEnabled = await AppPermissionsMonitor().getLocationStatus();
       final currentGpsStatus = isGpsEnabled! ? 'ON' : 'OFF';
 
+      // Independientemente de si hay cambio o no, intentamos obtener el ID de dispositivo
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+
       if (lastGpsStatus != currentGpsStatus) {
+        await FileManager.instance.writeToLog(
+            "[GPS_DEBUG] Se detectó un cambio en el estado del GPS del dispositivo: $deviceId\n");
+
         await prefs.setString(
             AppConfig.sharedPreferencesGpsStatus, currentGpsStatus);
 
-        final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
-
         // Crear una entidad GpsStatus para guardar en la base de datos
+        final deviceRepository = di.sl<DeviceRepository>();
+
+        final deviceDbId = await deviceRepository.getDbIdByDeviceId(deviceId!);
+
+        if (deviceDbId == null) {
+          await FileManager.instance.writeToLog(
+              "[GPS] Error: No se pudo obtener el ID de base de datos para el dispositivo\n");
+          return false;
+        }
+
         final gpsStatus = GpsStatus(
-          deviceId: deviceId!,
+          deviceId: deviceDbId, // Usamos el UUID interno
           status: currentGpsStatus,
           startTime: DateTime.now(),
         );
@@ -260,7 +275,7 @@ class Controller {
         final gpsRepository = di.sl<GpsRepository>();
 
         // Guardar el nuevo estado
-        await gpsRepository.saveGpsStatus(gpsStatus);
+        final saveResult = await gpsRepository.saveGpsStatus(gpsStatus);
 
         // También guardar en el archivo local para compatibilidad
         final now = DateTime.now();
@@ -272,9 +287,17 @@ class Controller {
 
         await FileManager.instance
             .writeToLog("[GPS] Estado actualizado a: $currentGpsStatus\n");
+      } else {
+        await FileManager.instance
+            .writeToLog("[GPS_DEBUG] No hubo cambio en el estado del GPS\n");
       }
+
+      await FileManager.instance
+          .writeToLog("[GPS_DEBUG] Tarea de detección de GPS completada\n");
       return true;
     } catch (e) {
+      await FileManager.instance
+          .writeToLog("[GPS_DEBUG] Error en la tarea de detección: $e\n");
       await FileManager.instance.writeToLog("[GPS] Error: $e\n");
       return false;
     }
