@@ -7,7 +7,7 @@ class DBConstants {
   static const String installedAppsTable = 'installed_apps';
   static const String permissionGroupsTable = 'permission_groups';
   static const String permissionStatusTable = 'permission_status';
-  static const String permissionChangesTable = 'permission_changes';
+  static const String permissionHistoryTable = 'permission_history';
   static const String deviceSecurityTable = 'device_security';
   static const String systemLogsTable = 'system_logs';
 
@@ -28,7 +28,7 @@ class DBConstants {
   static const String appIdColumn = 'app_id';
   static const String permissionGroupIdColumn = 'permission_group_id';
 
-  // Columnas de Permission Changes
+  // Columnas de Permission History
   static const String permissionGroupColumn = 'permission_group';
   static const String previousStatusColumn = 'previous_status';
   static const String newStatusColumn = 'new_status';
@@ -37,6 +37,7 @@ class DBConstants {
   // Columnas de Device Security
   static const String biometricAuthEnabledColumn = 'biometric_auth_enabled';
   static const String lockScreenEnabledColumn = 'lock_screen_enabled';
+  static const String lockScreenTypeColumn = 'lock_screen_type';
 
   // Columnas de System Logs
   static const String logTypeColumn = 'log_type';
