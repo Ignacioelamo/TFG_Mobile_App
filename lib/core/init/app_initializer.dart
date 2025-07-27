@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/app_config.dart';
 import '../../models/file_manager.dart';
-import '../services/device_registration_service.dart';
 import '../services/dependency_injection_service.dart';
 import '../services/supabase_service.dart';
 
@@ -20,9 +19,6 @@ class AppInitializer {
 
     // Inicializar contenedor de inyección de dependencias
     await DependencyInjectionService.initialize();
-
-    // Registrar el dispositivo
-    await DeviceRegistrationService.registerDevice();
   }
 
   /// Inicializa el sistema de logs

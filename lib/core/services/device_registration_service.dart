@@ -5,16 +5,18 @@ import '../../models/file_manager.dart';
 import '../../domain/entities/device.dart';
 import '../../domain/usecases/register_device_usecase.dart';
 import '../../injection_container.dart' as di;
+import 'auth_service.dart';
 
 /// Servicio encargado de la gestión del registro del dispositivo
 class DeviceRegistrationService {
   /// Obtiene el ID del dispositivo y lo registra en la base de datos
+  /// Devuelve el ID de la base de datos del dispositivo (UUID)
   static Future<String?> registerDevice() async {
     try {
       // Obtener o generar ID del dispositivo
-      final deviceId = await _ensureDeviceId();
+      final deviceUniqueId = await _ensureDeviceId();
 
-      if (deviceId == null) {
+      if (deviceUniqueId == null) {
         await FileManager.instance.writeToLog(
             "[DeviceRegistration] No se pudo obtener ID de dispositivo\n");
         return null;
@@ -22,20 +24,28 @@ class DeviceRegistrationService {
 
       // Registrar dispositivo usando el caso de uso
       await FileManager.instance.writeToLog(
-          "[DeviceRegistration] Registrando dispositivo con ID: $deviceId\n");
+          "[DeviceRegistration] Registrando dispositivo con ID: $deviceUniqueId\n");
 
       final registerDeviceUseCase = di.sl<RegisterDeviceUseCase>();
       final device = Device(
-        deviceId: deviceId,
+        deviceId: deviceUniqueId,
         lastActive: DateTime.now(),
       );
 
-      final result = await registerDeviceUseCase.execute(device);
+      final deviceDbId = await registerDeviceUseCase.execute(device);
 
-      if (result != null) {
+      if (deviceDbId != null) {
         await FileManager.instance.writeToLog(
-            "[DeviceRegistration] Dispositivo registrado exitosamente con ID en DB: $result\n");
-        return result;
+            "[DeviceRegistration] Dispositivo registrado exitosamente con ID en DB: $deviceDbId\n");
+
+        // Si hay un usuario autenticado, asociar dispositivo con usuario
+        if (AuthService.isLoggedIn()) {
+          await AuthService.updateUserDevice(deviceDbId);
+          await FileManager.instance.writeToLog(
+              "[DeviceRegistration] Dispositivo asociado al usuario autenticado\n");
+        }
+
+        return deviceDbId;
       } else {
         await FileManager.instance.writeToLog(
             "[DeviceRegistration] Error al registrar dispositivo\n");
@@ -48,6 +58,7 @@ class DeviceRegistrationService {
   }
 
   /// Asegura que tenemos un ID de dispositivo, obteniéndolo si es necesario
+  /// Este es el ID único del dispositivo físico (no el UUID de la base de datos)
   static Future<String?> _ensureDeviceId() async {
     try {
       final prefs = await SharedPreferences.getInstance();
