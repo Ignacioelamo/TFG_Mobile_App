@@ -99,8 +99,7 @@ class AuthService {
       await SupabaseService.client
           .from('user')
           .update({'device_id': deviceDbId})
-          .eq('id', _currentUserId!)
-          .execute();
+          .eq('id', _currentUserId!);
 
       await FileManager.instance.writeToLog(
           "[AuthService] Dispositivo $deviceDbId asociado al usuario $_currentUserId\n");
