@@ -14,11 +14,14 @@ class AppConfig {
   static const permissionsGroupFileName = 'groupPermissions.csv';
   static const permissionsUpdatesFileName = 'permissionsUpdates.csv';
   static const deviceSecurityFileName = 'device_security_info.csv';
+  static const appUseTimeFileName = 'app_use_time.csv';
 
   static const sharedPreferencesIdDevice = 'deviceId';
   static const sharedPreferencesPermissionsGroupApps = 'permissions';
   static const sharedPreferencesGpsStatus = 'gpsStatus';
   static const sharedPreferencesDeviceSecurity = 'deviceSecurity';
+  static const sharedPreferencesLastAppUseTimeCollection =
+      'lastAppUseTimeCollectionDate';
 
   final List<String> permissionGroups = [
     "ACTIVITY_RECOGNITION",

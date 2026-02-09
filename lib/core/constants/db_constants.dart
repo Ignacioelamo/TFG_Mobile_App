@@ -43,4 +43,11 @@ class DBConstants {
   static const String logTypeColumn = 'log_type';
   static const String messageColumn = 'message';
   static const String levelColumn = 'level';
+
+  // Tabla de tiempo de uso de aplicaciones
+  static const String appUseTimeTable = 'app_use_time';
+
+  // Columnas de App Use Time
+  static const String dateColumn = 'date';
+  static const String minutesColumn = 'minutes';
 }

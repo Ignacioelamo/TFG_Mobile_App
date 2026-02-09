@@ -1,18 +1,22 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'data/datasources/app_use_time_datasource.dart';
 import 'data/datasources/device_datasource.dart';
 import 'data/datasources/gps_datasource.dart';
 import 'data/datasources/security_datasource.dart';
+import 'data/repositories/app_use_time_repository_impl.dart';
 import 'data/repositories/device_repository_impl.dart';
 import 'data/repositories/gps_repository_impl.dart';
 import 'data/repositories/security_repository_impl.dart';
+import 'domain/repositories/app_use_time_repository.dart';
 import 'domain/repositories/device_repository.dart';
 import 'domain/repositories/gps_repository.dart';
 import 'domain/repositories/security_repository.dart';
 import 'domain/usecases/get_last_gps_status_usecase.dart';
 import 'domain/usecases/get_last_security_info_usecase.dart';
 import 'domain/usecases/register_device_usecase.dart';
+import 'domain/usecases/save_app_use_times_usecase.dart';
 import 'domain/usecases/save_gps_status_usecase.dart';
 import 'domain/usecases/save_security_info_usecase.dart';
 import 'domain/usecases/update_last_active_usecase.dart';
@@ -43,6 +47,10 @@ Future<void> init() async {
       () => SupabaseSecurityDataSource(supabase),
     );
 
+    sl.registerLazySingleton<AppUseTimeDataSource>(
+      () => SupabaseAppUseTimeDataSource(supabase),
+    );
+
     // Repositorios
     sl.registerLazySingleton<DeviceRepository>(
       () => DeviceRepositoryImpl(sl<DeviceDataSource>()),
@@ -54,6 +62,10 @@ Future<void> init() async {
 
     sl.registerLazySingleton<SecurityRepository>(
       () => SecurityRepositoryImpl(sl<SecurityDataSource>()),
+    );
+
+    sl.registerLazySingleton<AppUseTimeRepository>(
+      () => AppUseTimeRepositoryImpl(sl<AppUseTimeDataSource>()),
     );
 
     // Casos de uso
@@ -79,6 +91,10 @@ Future<void> init() async {
 
     sl.registerLazySingleton(
       () => GetLastSecurityInfoUseCase(sl<SecurityRepository>()),
+    );
+
+    sl.registerLazySingleton(
+      () => SaveAppUseTimesUseCase(sl<AppUseTimeRepository>()),
     );
 
     await FileManager.instance
