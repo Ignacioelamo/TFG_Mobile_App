@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
+import '../domain/entities/app_use_time.dart';
 
 class FileManager {
   FileManager._privateConstructor();
@@ -230,6 +231,31 @@ class FileManager {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  /// Escribe un snapshot de tiempo de uso de aplicaciones en el archivo CSV local.
+  ///
+  /// Para cada entrada en la lista, escribe una línea con formato:
+  /// Date,Time,packageName,MinutesToday
+  ///
+  /// \param items Lista de entidades AppUseTime a escribir.
+  Future<void> writeAppUseTimeSnapshot(List<AppUseTime> items) async {
+    try {
+      final now = DateTime.now();
+      final DateFormat dateFormatter = DateFormat('yyyy-MM-dd');
+      final DateFormat timeFormatter = DateFormat('HH:mm:ss');
+      final String formattedDate = dateFormatter.format(now);
+      final String formattedTime = timeFormatter.format(now);
+
+      for (var item in items) {
+        final line =
+            '$formattedDate,$formattedTime,${item.packageName},${item.minutes}\n';
+        await writeToFile(AppConfig.appUseTimeFileName, line);
+      }
+    } catch (e) {
+      await writeToLog(
+          "[FileManager] Error escribiendo snapshot de app_use_time: $e\n");
     }
   }
 

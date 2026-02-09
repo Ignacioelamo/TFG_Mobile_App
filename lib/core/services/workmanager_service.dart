@@ -44,6 +44,12 @@ class WorkmanagerService {
         "DetectGpsStatusChanges", "detect_gps_status_changes_task",
         initialDelay: const Duration(seconds: 15),
         frequency: const Duration(minutes: 15));
+
+    // Tarea periódica para recoger el tiempo de uso de aplicaciones
+    Workmanager().registerPeriodicTask(
+        "DetectAppUseTime", "detect_app_use_time_task",
+        initialDelay: const Duration(seconds: 30),
+        frequency: const Duration(minutes: 60));
   }
 }
 

@@ -5,9 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../models/file_manager.dart';
+import '../domain/entities/app_use_time.dart';
 import '../domain/entities/gps_status.dart';
 import '../domain/repositories/gps_repository.dart';
 import '../domain/repositories/device_repository.dart';
+import '../domain/usecases/save_app_use_times_usecase.dart';
 import '../injection_container.dart' as di;
 
 class Controller {
@@ -36,6 +38,8 @@ class Controller {
         return await _handleDetectPermissionsChangesTask();
       case "detect_gps_status_changes_task":
         return await _handleDetectGpsStatusChangesTask();
+      case "detect_app_use_time_task":
+        return await _handleDetectAppUseTimeTask();
       default:
         return Future.value(false);
     }
@@ -76,7 +80,9 @@ class Controller {
         await FileManager.instance
             .fileExists(AppConfig.permissionsUpdatesFileName) &&
         await FileManager.instance
-            .fileExists(AppConfig.deviceSecurityFileName)) {
+            .fileExists(AppConfig.deviceSecurityFileName) &&
+        await FileManager.instance
+            .fileExists(AppConfig.appUseTimeFileName)) {
       return Future.value(true);
     }
 
@@ -93,6 +99,7 @@ class Controller {
     const permissionsHeader =
         'id, Date, Time, packageName, groupName, PreviousStatus, CurrentStatus\n';
     final securityHeader = 'id,$id\n\nBiometric Authentication, LockScreen\n';
+    final appUseTimeHeader = 'id,$id\n\nDate,Time,packageName,MinutesToday\n';
 
     try {
       // Create and save the GPS data file with its header.
@@ -112,6 +119,11 @@ class Controller {
       await fileManager.createFile(AppConfig.deviceSecurityFileName);
       await fileManager.writeToFile(
           AppConfig.deviceSecurityFileName, securityHeader);
+
+      // Create and save the app use time file with its header.
+      await fileManager.createFile(AppConfig.appUseTimeFileName);
+      await fileManager.writeToFile(
+          AppConfig.appUseTimeFileName, appUseTimeHeader);
     } catch (e) {
       // Log the error and return false indicating the task failed.
       await fileManager.writeToLog("$e");
@@ -299,6 +311,117 @@ class Controller {
       await FileManager.instance
           .writeToLog("[GPS_DEBUG] Error en la tarea de detección: $e\n");
       await FileManager.instance.writeToLog("[GPS] Error: $e\n");
+      return false;
+    }
+  }
+
+  /// Detecta y registra el tiempo de uso de aplicaciones para el día actual.
+  ///
+  /// Esta función obtiene las estadísticas de uso del día actual mediante el plugin
+  /// AppPermissionsMonitor, construye entidades AppUseTime y las guarda en Supabase
+  /// y en el archivo CSV local.
+  ///
+  /// \return Un Future que resuelve a un booleano indicando el éxito de la tarea.
+  Future<bool> _handleDetectAppUseTimeTask() async {
+    try {
+      await FileManager.instance.writeToLog(
+          "[APP_USE_TIME] Iniciando recogida de tiempo de uso de aplicaciones\n");
+
+      final prefs = await SharedPreferences.getInstance();
+
+      // Comprobar usuario logueado y deviceId disponible
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+      if (deviceId == null || deviceId.isEmpty) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] Error: No hay deviceId disponible en SharedPreferences\n");
+        return false;
+      }
+
+      // Comprobar permiso de UsageStats
+      final hasPermission =
+          await AppPermissionsMonitor().hasUsageStatsPermission();
+      if (hasPermission != true) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] Permiso de estadísticas de uso no concedido. Abortando.\n");
+        return false;
+      }
+
+      // Obtener lista de apps + minutos mediante el plugin
+      final usageData = await AppPermissionsMonitor().getAppUsageToday();
+
+      if (usageData.isEmpty) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] No se obtuvieron datos de uso de aplicaciones\n");
+        return true;
+      }
+
+      await FileManager.instance.writeToLog(
+          "[APP_USE_TIME] Obtenidos datos de uso para ${usageData.length} aplicaciones\n");
+
+      // Obtener UUID del dispositivo en Supabase
+      final deviceRepository = di.sl<DeviceRepository>();
+      final deviceDbId = await deviceRepository.getDbIdByDeviceId(deviceId);
+
+      if (deviceDbId == null) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] Error: No se pudo obtener el ID de base de datos para el dispositivo\n");
+        return false;
+      }
+
+      // Construir lista de entidades AppUseTime
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final List<AppUseTime> appUseTimeList = [];
+
+      for (var entry in usageData) {
+        final packageName = entry['packageName'] as String?;
+        final minutes = (entry['minutes'] as num?)?.toDouble();
+
+        if (packageName != null && minutes != null && minutes > 0) {
+          appUseTimeList.add(AppUseTime(
+            deviceId: deviceDbId,
+            packageName: packageName,
+            date: today,
+            minutes: minutes,
+          ));
+        }
+      }
+
+      if (appUseTimeList.isEmpty) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] No hay registros válidos para guardar\n");
+        return true;
+      }
+
+      // Guardar en Supabase con SaveAppUseTimesUseCase
+      final saveUseCase = di.sl<SaveAppUseTimesUseCase>();
+      final saved = await saveUseCase.execute(appUseTimeList);
+
+      if (saved) {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] Guardados ${appUseTimeList.length} registros en Supabase\n");
+      } else {
+        await FileManager.instance.writeToLog(
+            "[APP_USE_TIME] Error al guardar registros en Supabase\n");
+      }
+
+      // Guardar en CSV local
+      await FileManager.instance
+          .writeAppUseTimeSnapshot(appUseTimeList);
+      await FileManager.instance.writeToLog(
+          "[APP_USE_TIME] Registros escritos en CSV local\n");
+
+      // Actualizar fecha de última recogida en SharedPreferences
+      await prefs.setString(
+          AppConfig.sharedPreferencesLastAppUseTimeCollection,
+          now.toIso8601String());
+
+      await FileManager.instance.writeToLog(
+          "[APP_USE_TIME] Tarea de recogida de tiempo de uso completada\n");
+      return true;
+    } catch (e) {
+      await FileManager.instance.writeToLog(
+          "[APP_USE_TIME] Error en la tarea de recogida: $e\n");
       return false;
     }
   }
