@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../core/services/permission_service.dart';
 
 class PermissionsScreen extends StatefulWidget {
   const PermissionsScreen({super.key});
@@ -17,6 +18,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
   bool _phoneGranted = false;
   bool _cameraGranted = false;
   bool _contactsGranted = false;
+  bool _usageStatsGranted = false;
 
   @override
   void initState() {
@@ -37,6 +39,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     var phoneStatus = await Permission.phone.status;
     var cameraStatus = await Permission.camera.status;
     var contactsStatus = await Permission.contacts.status;
+    var usageStatsGranted = await PermissionService.hasUsageStatsPermission();
 
     setState(() {
       _locationGranted = locationStatus.isGranted;
@@ -46,6 +49,7 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       _phoneGranted = phoneStatus.isGranted;
       _cameraGranted = cameraStatus.isGranted;
       _contactsGranted = contactsStatus.isGranted;
+      _usageStatsGranted = usageStatsGranted;
       _isLoading = false;
     });
   }
@@ -102,6 +106,17 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     final status = await Permission.contacts.request();
     setState(() {
       _contactsGranted = status.isGranted;
+    });
+  }
+
+  // Solicitar permiso de estadísticas de uso
+  Future<void> _requestUsageStatsPermission() async {
+    await PermissionService.requestUsageStatsPermission();
+    // Esperar un momento y luego re-verificar (el usuario debe activarlo manualmente en ajustes)
+    await Future.delayed(const Duration(seconds: 1));
+    final granted = await PermissionService.hasUsageStatsPermission();
+    setState(() {
+      _usageStatsGranted = granted;
     });
   }
 
@@ -187,6 +202,13 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                       _contactsGranted,
                       'Permite acceder a la información de contactos',
                       _requestContactsPermission,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildPermissionItem(
+                      'Estadísticas de uso',
+                      _usageStatsGranted,
+                      'Permite obtener el tiempo de uso de las aplicaciones para fines de investigación',
+                      _requestUsageStatsPermission,
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton(
