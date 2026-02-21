@@ -4,20 +4,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/datasources/app_use_time_datasource.dart';
 import 'data/datasources/device_datasource.dart';
 import 'data/datasources/gps_datasource.dart';
+import 'data/datasources/permission_datasource.dart';
 import 'data/datasources/security_datasource.dart';
 import 'data/repositories/app_use_time_repository_impl.dart';
 import 'data/repositories/device_repository_impl.dart';
 import 'data/repositories/gps_repository_impl.dart';
+import 'data/repositories/permission_repository_impl.dart';
 import 'data/repositories/security_repository_impl.dart';
 import 'domain/repositories/app_use_time_repository.dart';
 import 'domain/repositories/device_repository.dart';
 import 'domain/repositories/gps_repository.dart';
+import 'domain/repositories/permission_repository.dart';
 import 'domain/repositories/security_repository.dart';
 import 'domain/usecases/get_last_gps_status_usecase.dart';
 import 'domain/usecases/get_last_security_info_usecase.dart';
 import 'domain/usecases/register_device_usecase.dart';
 import 'domain/usecases/save_app_use_times_usecase.dart';
 import 'domain/usecases/save_gps_status_usecase.dart';
+import 'domain/usecases/save_permission_changes_usecase.dart';
+import 'domain/usecases/save_permission_snapshot_usecase.dart';
 import 'domain/usecases/save_security_info_usecase.dart';
 import 'domain/usecases/update_last_active_usecase.dart';
 import 'models/file_manager.dart';
@@ -51,6 +56,10 @@ Future<void> init() async {
       () => SupabaseAppUseTimeDataSource(supabase),
     );
 
+    sl.registerLazySingleton<PermissionDataSource>(
+      () => SupabasePermissionDataSource(supabase),
+    );
+
     // Repositorios
     sl.registerLazySingleton<DeviceRepository>(
       () => DeviceRepositoryImpl(sl<DeviceDataSource>()),
@@ -66,6 +75,10 @@ Future<void> init() async {
 
     sl.registerLazySingleton<AppUseTimeRepository>(
       () => AppUseTimeRepositoryImpl(sl<AppUseTimeDataSource>()),
+    );
+
+    sl.registerLazySingleton<PermissionRepository>(
+      () => PermissionRepositoryImpl(sl<PermissionDataSource>()),
     );
 
     // Casos de uso
@@ -95,6 +108,14 @@ Future<void> init() async {
 
     sl.registerLazySingleton(
       () => SaveAppUseTimesUseCase(sl<AppUseTimeRepository>()),
+    );
+
+    sl.registerLazySingleton(
+      () => SavePermissionSnapshotUseCase(sl<PermissionRepository>()),
+    );
+
+    sl.registerLazySingleton(
+      () => SavePermissionChangesUseCase(sl<PermissionRepository>()),
     );
 
     await FileManager.instance

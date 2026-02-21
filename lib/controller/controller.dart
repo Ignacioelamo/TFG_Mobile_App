@@ -5,11 +5,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_config.dart';
 import '../models/file_manager.dart';
+import '../domain/entities/app_permission_snapshot.dart';
 import '../domain/entities/app_use_time.dart';
 import '../domain/entities/gps_status.dart';
+import '../domain/entities/permission_change.dart';
 import '../domain/repositories/gps_repository.dart';
 import '../domain/repositories/device_repository.dart';
 import '../domain/usecases/save_app_use_times_usecase.dart';
+import '../domain/usecases/save_permission_changes_usecase.dart';
+import '../domain/usecases/save_permission_snapshot_usecase.dart';
 import '../injection_container.dart' as di;
 
 class Controller {
@@ -135,9 +139,8 @@ class Controller {
 
   /// Handles the task of requesting app permissions.
   ///
-  /// This function retrieves the permission statuses of installed apps and generates
-  /// a permissions group using the FileManager. If an error occurs during the process,
-  /// it logs the error and returns false.
+  /// This function retrieves the permission statuses of installed apps, generates
+  /// a permissions group CSV using the FileManager, and saves the snapshot to Supabase.
   ///
   /// \return A Future that resolves to a boolean indicating the success of the task.
   Future<bool> _handleRequestAppPermissionsTask() async {
@@ -146,14 +149,45 @@ class Controller {
       List<dynamic> appsPermissions =
           await AppPermissionsMonitor().getInstalledAppsPermissionStatuses();
 
-      // Generate a permissions group using the retrieved statuses.
+      // Generate a permissions group CSV using the retrieved statuses (local).
       await FileManager.instance.generatePermissionsGroup(appsPermissions);
 
-      // Return true indicating the task was successful.
+      // Guardar snapshot en Supabase
+      final prefs = await SharedPreferences.getInstance();
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+
+      if (deviceId != null && deviceId.isNotEmpty) {
+        final deviceRepository = di.sl<DeviceRepository>();
+        final deviceDbId =
+            await deviceRepository.getDbIdByDeviceId(deviceId);
+
+        if (deviceDbId != null) {
+          // Convertir datos del plugin a entidades AppPermissionSnapshot
+          final snapshots = _convertToSnapshots(appsPermissions);
+
+          // Guardar en Supabase
+          final saveSnapshotUseCase =
+              di.sl<SavePermissionSnapshotUseCase>();
+          final saved =
+              await saveSnapshotUseCase.execute(deviceDbId, snapshots);
+
+          if (saved) {
+            await FileManager.instance.writeToLog(
+                "[PERMISSIONS] Snapshot inicial guardado en Supabase: ${snapshots.length} apps\n");
+          } else {
+            await FileManager.instance.writeToLog(
+                "[PERMISSIONS] Error al guardar snapshot inicial en Supabase\n");
+          }
+        } else {
+          await FileManager.instance.writeToLog(
+              "[PERMISSIONS] No se pudo obtener deviceDbId para guardar en Supabase\n");
+        }
+      }
+
       return Future.value(true);
     } catch (e) {
-      // Log the error and return false indicating the task failed.
-      await FileManager.instance.writeToLog("$e");
+      await FileManager.instance
+          .writeToLog("[PERMISSIONS] Error en tarea de permisos inicial: $e\n");
       return Future.value(false);
     }
   }
@@ -162,7 +196,8 @@ class Controller {
   ///
   /// This function compares the current permissions of installed apps with the previously stored permissions.
   /// It identifies any changes in the permissions and logs these changes. The updated permissions data is then
-  /// saved back to shared preferences.
+  /// saved back to shared preferences. Also saves changes to Supabase (permission_history) and updates
+  /// the current state (permission_status).
   ///
   /// \return A Future that resolves to a boolean indicating the success of the task.
   Future<bool> _handleDetectPermissionsChangesTask() async {
@@ -187,7 +222,7 @@ class Controller {
       for (var item in actualPermissions) item['packageName']: item
     };
 
-    // List to store detected changes.
+    // List to store detected changes (CSV format for local file).
     final changes = <String>[];
 
     // Compare current permissions with previous permissions.
@@ -228,10 +263,51 @@ class Controller {
     await prefs.setString(AppConfig.sharedPreferencesPermissionsGroupApps,
         jsonEncode(actualPermissions));
 
+    // Guardar en Supabase: snapshot actual + cambios en historial
+    try {
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+
+      if (deviceId != null && deviceId.isNotEmpty) {
+        final deviceRepository = di.sl<DeviceRepository>();
+        final deviceDbId =
+            await deviceRepository.getDbIdByDeviceId(deviceId);
+
+        if (deviceDbId != null) {
+          // Actualizar permission_status con el snapshot actual
+          final snapshots =
+              _convertToSnapshots(actualPermissions as List<dynamic>);
+          final saveSnapshotUseCase =
+              di.sl<SavePermissionSnapshotUseCase>();
+          await saveSnapshotUseCase.execute(deviceDbId, snapshots);
+
+          // Guardar cambios en permission_history
+          if (changes.isNotEmpty) {
+            final permissionChanges = _convertToPermissionChanges(
+                deviceDbId, changes);
+            final saveChangesUseCase =
+                di.sl<SavePermissionChangesUseCase>();
+            final saved = await saveChangesUseCase.execute(
+                deviceDbId, permissionChanges);
+
+            if (saved) {
+              await FileManager.instance.writeToLog(
+                  "[PERMISSIONS] ${permissionChanges.length} cambios guardados en Supabase\n");
+            } else {
+              await FileManager.instance.writeToLog(
+                  "[PERMISSIONS] Error al guardar cambios en Supabase\n");
+            }
+          }
+        }
+      }
+    } catch (e) {
+      await FileManager.instance.writeToLog(
+          "[PERMISSIONS] Error guardando en Supabase (continuando con CSV): $e\n");
+    }
+
     if (changes.isEmpty) {
       return true;
     }
-    // Update the old group permissions file with the detected changes.
+    // Update the old group permissions file with the detected changes (local CSV).
     await FileManager.instance.updateOldGroupPermissions(changes);
 
     // Return true indicating the task was successful.
@@ -424,5 +500,48 @@ class Controller {
           "[APP_USE_TIME] Error en la tarea de recogida: $e\n");
       return false;
     }
+  }
+
+  /// Convierte los datos crudos del plugin a una lista de AppPermissionSnapshot.
+  ///
+  /// [appsPermissions] es la lista dinámica devuelta por el plugin con formato:
+  /// [{'packageName': '...', 'permissionGroups': {'LOCATION': 'Always', ...}}, ...]
+  List<AppPermissionSnapshot> _convertToSnapshots(
+      List<dynamic> appsPermissions) {
+    return appsPermissions.map((app) {
+      final packageName = app['packageName'] as String;
+      final groups = Map<String, String>.from(
+          (app['permissionGroups'] as Map).cast<String, String>());
+      return AppPermissionSnapshot(
+        packageName: packageName,
+        permissionStatuses: groups,
+      );
+    }).toList();
+  }
+
+  /// Convierte las cadenas de cambios detectados a entidades PermissionChange.
+  ///
+  /// Cada cadena tiene formato: "packageName,groupName,previousStatus,newStatus"
+  /// [deviceDbId] es el UUID del dispositivo en Supabase
+  /// [changes] es la lista de cadenas con los cambios detectados
+  List<PermissionChange> _convertToPermissionChanges(
+      String deviceDbId, List<String> changes) {
+    final permissionChanges = <PermissionChange>[];
+
+    for (var change in changes) {
+      final parts = change.split(',');
+      if (parts.length != 4) continue;
+
+      permissionChanges.add(PermissionChange(
+        deviceId: deviceDbId,
+        packageName: parts[0],
+        permissionGroup: parts[1],
+        previousStatus: parts[2] == 'null' ? null : parts[2],
+        newStatus: parts[3],
+        changedAt: DateTime.now(),
+      ));
+    }
+
+    return permissionChanges;
   }
 }
