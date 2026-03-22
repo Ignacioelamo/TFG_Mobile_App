@@ -24,6 +24,7 @@ import 'domain/usecases/save_gps_status_usecase.dart';
 import 'domain/usecases/save_permission_changes_usecase.dart';
 import 'domain/usecases/save_permission_snapshot_usecase.dart';
 import 'domain/usecases/save_security_info_usecase.dart';
+import 'domain/usecases/update_device_updated_usecase.dart';
 import 'domain/usecases/update_last_active_usecase.dart';
 import 'models/file_manager.dart';
 
@@ -88,6 +89,10 @@ Future<void> init() async {
 
     sl.registerLazySingleton(
       () => UpdateLastActiveUseCase(sl<DeviceRepository>()),
+    );
+
+    sl.registerLazySingleton(
+      () => UpdateDeviceUpdatedUseCase(sl<DeviceRepository>()),
     );
 
     sl.registerLazySingleton(

@@ -12,12 +12,16 @@ class Device {
   /// Última vez que el dispositivo estuvo activo
   final DateTime? lastActive;
 
+  /// Indica si el parche de seguridad del firmware está reciente. Null = no calculado aún.
+  final bool? updated;
+
   /// Constructor
   Device({
     this.id,
     required this.deviceId,
     this.createdAt,
     this.lastActive,
+    this.updated,
   });
 
   /// Crea una copia del objeto con algunos campos modificados
@@ -26,18 +30,20 @@ class Device {
     String? deviceId,
     DateTime? createdAt,
     DateTime? lastActive,
+    bool? updated,
   }) {
     return Device(
       id: id ?? this.id,
       deviceId: deviceId ?? this.deviceId,
       createdAt: createdAt ?? this.createdAt,
       lastActive: lastActive ?? this.lastActive,
+      updated: updated ?? this.updated,
     );
   }
 
   @override
   String toString() {
-    return 'Device(id: $id, deviceId: $deviceId, createdAt: $createdAt, lastActive: $lastActive)';
+    return 'Device(id: $id, deviceId: $deviceId, createdAt: $createdAt, lastActive: $lastActive, updated: $updated)';
   }
 
   @override
@@ -47,7 +53,8 @@ class Device {
         other.id == id &&
         other.deviceId == deviceId &&
         other.createdAt == createdAt &&
-        other.lastActive == lastActive;
+        other.lastActive == lastActive &&
+        other.updated == updated;
   }
 
   @override
@@ -55,6 +62,7 @@ class Device {
     return id.hashCode ^
         deviceId.hashCode ^
         createdAt.hashCode ^
-        lastActive.hashCode;
+        lastActive.hashCode ^
+        updated.hashCode;
   }
 }

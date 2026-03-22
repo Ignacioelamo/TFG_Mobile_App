@@ -4,6 +4,7 @@ import '../../config/app_config.dart';
 import '../../models/file_manager.dart';
 import '../../domain/entities/device.dart';
 import '../../domain/usecases/register_device_usecase.dart';
+import '../../domain/usecases/update_device_updated_usecase.dart';
 import '../../injection_container.dart' as di;
 import 'auth_service.dart';
 
@@ -37,6 +38,19 @@ class DeviceRegistrationService {
       if (deviceDbId != null) {
         await FileManager.instance.writeToLog(
             "[DeviceRegistration] Dispositivo registrado exitosamente con ID en DB: $deviceDbId\n");
+
+        // Comprobar y actualizar el campo updated (firmware)
+        try {
+          final updateUpdatedUseCase = di.sl<UpdateDeviceUpdatedUseCase>();
+          final updated = await updateUpdatedUseCase.execute(deviceUniqueId);
+          if (updated) {
+            await FileManager.instance.writeToLog(
+                "[DeviceRegistration] Campo updated actualizado correctamente\n");
+          }
+        } catch (e) {
+          await FileManager.instance.writeToLog(
+              "[DeviceRegistration] Error actualizando campo updated: $e\n");
+        }
 
         // Si hay un usuario autenticado, asociar dispositivo con usuario
         if (AuthService.isLoggedIn()) {

@@ -31,4 +31,9 @@ class DeviceRepositoryImpl implements DeviceRepository {
   Future<String?> getDbIdByDeviceId(String deviceId) async {
     return await _dataSource.getDbIdByDeviceId(deviceId);
   }
+
+  @override
+  Future<bool> updateUpdated(String deviceId, bool updated) async {
+    return await _dataSource.updateUpdated(deviceId, updated);
+  }
 }

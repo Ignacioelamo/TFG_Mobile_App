@@ -9,12 +9,14 @@ class DeviceDto {
   final String deviceId;
   final DateTime? createdAt;
   final DateTime? lastActive;
+  final bool? updated;
 
   DeviceDto({
     this.id,
     required this.deviceId,
     this.createdAt,
     this.lastActive,
+    this.updated,
   });
 
   /// Crea un DeviceDto a partir de un JSON
@@ -28,6 +30,7 @@ class DeviceDto {
       lastActive: json['last_active'] != null
           ? DateTime.parse(json['last_active'])
           : null,
+      updated: json['updated'] as bool?,
     );
   }
 
@@ -47,6 +50,11 @@ class DeviceDto {
       data['last_active'] = lastActive!.toIso8601String();
     }
 
+    // Solo incluimos updated si no es nulo
+    if (updated != null) {
+      data['updated'] = updated;
+    }
+
     return data;
   }
 
@@ -57,6 +65,7 @@ class DeviceDto {
       deviceId: deviceId,
       createdAt: createdAt,
       lastActive: lastActive,
+      updated: updated,
     );
   }
 
@@ -67,6 +76,7 @@ class DeviceDto {
       deviceId: device.deviceId,
       createdAt: device.createdAt,
       lastActive: device.lastActive,
+      updated: device.updated,
     );
   }
 }

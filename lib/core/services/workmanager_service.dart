@@ -50,6 +50,12 @@ class WorkmanagerService {
         "DetectAppUseTime", "detect_app_use_time_task",
         initialDelay: const Duration(seconds: 30),
         frequency: const Duration(minutes: 60));
+
+    // Tarea periódica para comprobar y actualizar el campo updated (firmware)
+    Workmanager().registerPeriodicTask(
+        "UpdateDeviceUpdated", "update_device_updated_task",
+        initialDelay: const Duration(minutes: 5),
+        frequency: const Duration(days: 1));
   }
 }
 

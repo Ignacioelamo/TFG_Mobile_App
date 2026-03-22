@@ -9,9 +9,10 @@ import '../domain/entities/app_permission_snapshot.dart';
 import '../domain/entities/app_use_time.dart';
 import '../domain/entities/gps_status.dart';
 import '../domain/entities/permission_change.dart';
-import '../domain/repositories/gps_repository.dart';
 import '../domain/repositories/device_repository.dart';
+import '../domain/repositories/gps_repository.dart';
 import '../domain/usecases/save_app_use_times_usecase.dart';
+import '../domain/usecases/update_device_updated_usecase.dart';
 import '../domain/usecases/save_permission_changes_usecase.dart';
 import '../domain/usecases/save_permission_snapshot_usecase.dart';
 import '../injection_container.dart' as di;
@@ -44,6 +45,8 @@ class Controller {
         return await _handleDetectGpsStatusChangesTask();
       case "detect_app_use_time_task":
         return await _handleDetectAppUseTimeTask();
+      case "update_device_updated_task":
+        return await _handleUpdateDeviceUpdatedTask();
       default:
         return Future.value(false);
     }
@@ -63,14 +66,49 @@ class Controller {
   }
 
   /// Writes static data including device ID and screen lock status.
+  /// Also updates the device's 'updated' field (firmware security patch).
   ///
   /// This function calls the `writeStaticData` method of the `FileManager` instance
-  /// to perform the task of writing static data. It returns a boolean indicating
-  /// the success of the operation.
+  /// to perform the task of writing static data, then checks and updates the
+  /// firmware updated status. It returns a boolean indicating the success of the operation.
   ///
   /// \return A Future that resolves to a boolean indicating the success of the task.
   Future<bool> _writeStaticData() async {
-    return await FileManager.instance.writeStaticData();
+    final result = await FileManager.instance.writeStaticData();
+    await _updateDeviceUpdatedField();
+    return result;
+  }
+
+  /// Comprueba y actualiza el campo updated (parche de seguridad del firmware).
+  /// Se ejecuta en login, en write_static_data y cada día vía update_device_updated_task.
+  Future<void> _updateDeviceUpdatedField() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+      if (deviceId != null && deviceId.isNotEmpty) {
+        final updateUpdatedUseCase = di.sl<UpdateDeviceUpdatedUseCase>();
+        await updateUpdatedUseCase.execute(deviceId);
+      }
+    } catch (e) {
+      await FileManager.instance.writeToLog(
+          "[Controller] Error actualizando campo updated: $e\n");
+    }
+  }
+
+  /// Tarea periódica: comprueba y actualiza el campo updated una vez al día.
+  Future<bool> _handleUpdateDeviceUpdatedTask() async {
+    try {
+      await FileManager.instance.writeToLog(
+          "[UPDATED] Iniciando comprobación del campo updated\n");
+      await _updateDeviceUpdatedField();
+      await FileManager.instance.writeToLog(
+          "[UPDATED] Comprobación del campo updated completada\n");
+      return true;
+    } catch (e) {
+      await FileManager.instance.writeToLog(
+          "[UPDATED] Error en tarea update_device_updated: $e\n");
+      return false;
+    }
   }
 
   /// Creates necessary files with predefined headers.

@@ -15,6 +15,9 @@ abstract class DeviceDataSource {
 
   /// Obtiene el ID de base de datos correspondiente a un deviceId
   Future<String?> getDbIdByDeviceId(String deviceId);
+
+  /// Actualiza el campo updated del dispositivo
+  Future<bool> updateUpdated(String deviceId, bool updated);
 }
 
 /// Implementación de DeviceDataSource que utiliza Supabase
@@ -127,6 +130,21 @@ class SupabaseDeviceDataSource implements DeviceDataSource {
     } catch (e) {
       print('Error obteniendo ID de base de datos: $e');
       return null;
+    }
+  }
+
+  @override
+  Future<bool> updateUpdated(String deviceId, bool updated) async {
+    try {
+      await _client
+          .from(_tableName)
+          .update({'updated': updated})
+          .eq('device_id', deviceId);
+
+      return true;
+    } catch (e) {
+      print('Error actualizando campo updated: $e');
+      return false;
     }
   }
 }

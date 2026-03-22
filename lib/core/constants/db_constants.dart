@@ -14,6 +14,7 @@ class DBConstants {
   // Columnas comunes
   static const String idColumn = 'id';
   static const String deviceIdColumn = 'device_id';
+  static const String updatedColumn = 'updated';
   static const String createdAtColumn = 'created_at';
   static const String updatedAtColumn = 'last_updated';
   static const String recordedAtColumn = 'recorded_at';

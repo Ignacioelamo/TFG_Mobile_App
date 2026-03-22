@@ -20,4 +20,9 @@ abstract class DeviceRepository {
   ///
   /// Utilizado internamente para operaciones relacionadas
   Future<String?> getDbIdByDeviceId(String deviceId);
+
+  /// Actualiza el campo updated del dispositivo (firmware/apps actualizados)
+  ///
+  /// [deviceId] es el ID único del dispositivo físico
+  Future<bool> updateUpdated(String deviceId, bool updated);
 }

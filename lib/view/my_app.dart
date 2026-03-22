@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 import '../core/services/auth_service.dart';
+import '../domain/repositories/device_repository.dart';
+import '../injection_container.dart' as di;
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -13,11 +17,13 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> {
   String? _username;
+  bool? _deviceUpdated;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadDeviceUpdatedStatus();
   }
 
   Future<void> _loadUserInfo() async {
@@ -26,6 +32,24 @@ class MyAppState extends State<MyApp> {
       setState(() {
         _username = userInfo['username'];
       });
+    }
+  }
+
+  Future<void> _loadDeviceUpdatedStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final deviceId = prefs.getString(AppConfig.sharedPreferencesIdDevice);
+      if (deviceId == null || deviceId.isEmpty) return;
+
+      final deviceRepository = di.sl<DeviceRepository>();
+      final device = await deviceRepository.getDeviceByDeviceId(deviceId);
+      if (mounted) {
+        setState(() {
+          _deviceUpdated = device?.updated;
+        });
+      }
+    } catch (_) {
+      // Ignorar errores al cargar estado de actualización
     }
   }
 
@@ -66,7 +90,37 @@ class MyAppState extends State<MyApp> {
                 ),
               ),
             ),
-          const SizedBox(height: 20),
+          if (_deviceUpdated != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Card(
+                child: ListTile(
+                  leading: Icon(
+                    _deviceUpdated!
+                        ? Icons.check_circle
+                        : Icons.warning_amber_rounded,
+                    color: _deviceUpdated! ? Colors.green : Colors.orange,
+                    size: 28,
+                  ),
+                  title: Text(
+                    _deviceUpdated!
+                        ? 'Dispositivo actualizado'
+                        : 'Dispositivo desactualizado',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: _deviceUpdated! ? Colors.green[800] : Colors.orange[800],
+                    ),
+                  ),
+                  subtitle: Text(
+                    _deviceUpdated!
+                        ? 'El parche de seguridad del firmware está al día'
+                        : 'Se recomienda actualizar el firmware del dispositivo',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+            ),
+          if (_deviceUpdated != null) const SizedBox(height: 12),
           Center(
             child: ElevatedButton(
               onPressed: _openFileDirectory,
