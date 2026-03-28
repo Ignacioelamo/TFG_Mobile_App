@@ -248,21 +248,27 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                isGranted
-                    ? const Icon(Icons.check_circle, color: Colors.green)
-                    : ElevatedButton(
-                        onPressed: onRequestPermission,
-                        child: const Text('Permitir'),
-                      ),
+                const SizedBox(width: 8),
+                if (isGranted)
+                  const Icon(Icons.check_circle, color: Colors.green)
+                else
+                  ElevatedButton(
+                    onPressed: onRequestPermission,
+                    child: const Text('Permitir'),
+                  ),
               ],
             ),
             const SizedBox(height: 8),
