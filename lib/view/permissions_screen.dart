@@ -15,9 +15,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
   bool _backgroundLocationGranted = false;
   bool _storageGranted = false;
   bool _notificationsGranted = false;
-  bool _phoneGranted = false;
-  bool _cameraGranted = false;
-  bool _contactsGranted = false;
   bool _usageStatsGranted = false;
 
   @override
@@ -36,9 +33,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     var backgroundStatus = await Permission.locationAlways.status;
     var storageStatus = await Permission.storage.status;
     var notificationStatus = await Permission.notification.status;
-    var phoneStatus = await Permission.phone.status;
-    var cameraStatus = await Permission.camera.status;
-    var contactsStatus = await Permission.contacts.status;
     var usageStatsGranted = await PermissionService.hasUsageStatsPermission();
 
     setState(() {
@@ -46,9 +40,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
       _backgroundLocationGranted = backgroundStatus.isGranted;
       _storageGranted = storageStatus.isGranted;
       _notificationsGranted = notificationStatus.isGranted;
-      _phoneGranted = phoneStatus.isGranted;
-      _cameraGranted = cameraStatus.isGranted;
-      _contactsGranted = contactsStatus.isGranted;
       _usageStatsGranted = usageStatsGranted;
       _isLoading = false;
     });
@@ -82,30 +73,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
     final status = await Permission.notification.request();
     setState(() {
       _notificationsGranted = status.isGranted;
-    });
-  }
-
-  // Solicitar permisos de teléfono
-  Future<void> _requestPhonePermission() async {
-    final status = await Permission.phone.request();
-    setState(() {
-      _phoneGranted = status.isGranted;
-    });
-  }
-
-  // Solicitar permisos de cámara
-  Future<void> _requestCameraPermission() async {
-    final status = await Permission.camera.request();
-    setState(() {
-      _cameraGranted = status.isGranted;
-    });
-  }
-
-  // Solicitar permisos de contactos
-  Future<void> _requestContactsPermission() async {
-    final status = await Permission.contacts.request();
-    setState(() {
-      _contactsGranted = status.isGranted;
     });
   }
 
@@ -181,27 +148,6 @@ class _PermissionsScreenState extends State<PermissionsScreen> {
                       _notificationsGranted,
                       'Permite mostrar notificaciones importantes',
                       _requestNotificationsPermission,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildPermissionItem(
-                      'Teléfono',
-                      _phoneGranted,
-                      'Permite acceder a información básica del teléfono',
-                      _requestPhonePermission,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildPermissionItem(
-                      'Cámara',
-                      _cameraGranted,
-                      'Permite usar la cámara para funciones adicionales',
-                      _requestCameraPermission,
-                    ),
-                    const SizedBox(height: 10),
-                    _buildPermissionItem(
-                      'Contactos',
-                      _contactsGranted,
-                      'Permite acceder a la información de contactos',
-                      _requestContactsPermission,
                     ),
                     const SizedBox(height: 10),
                     _buildPermissionItem(
