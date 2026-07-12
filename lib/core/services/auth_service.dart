@@ -1,3 +1,5 @@
+import 'package:bcrypt/bcrypt.dart';
+
 import '../../models/file_manager.dart';
 import 'supabase_service.dart';
 
@@ -29,11 +31,11 @@ class AuthService {
         return false;
       }
 
-      // Obtener la contraseña almacenada y verificarla
+      // La contraseña se almacena cifrada (hash bcrypt) en la tabla "user".
       String storedPassword = response['password'];
 
-      // Verificar si la contraseña coincide (comparación directa)
-      if (password == storedPassword) {
+      // Verificar la contraseña introducida contra el hash sin descifrarlo.
+      if (BCrypt.checkpw(password, storedPassword)) {
         _currentUserId = response['id'];
         await FileManager.instance.writeToLog(
             "[AuthService] Login exitoso para $username (ID: $_currentUserId)\n");
