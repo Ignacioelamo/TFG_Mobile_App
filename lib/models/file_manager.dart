@@ -285,7 +285,7 @@ class FileManager {
       final biometricAuth = canCheckBiometrics && isDeviceSecure ? 'Yes' : 'No';
 
       // Get screen lock type.
-      final result = await AppPermissionsMonitor().getScreenLockType();
+      final result = await AppPermissionsMonitor().isScreenLocked();
       final screenLockType = result == true ? 'Yes' : 'No';
       final content = '$biometricAuth, $screenLockType';
 

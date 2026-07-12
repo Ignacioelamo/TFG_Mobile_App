@@ -1,36 +1,3 @@
-/// Representa los posibles tipos de bloqueo de pantalla
-enum LockScreenType {
-  /// PIN numérico
-  pin,
-
-  /// Patrón gráfico
-  pattern,
-
-  /// Contraseña alfanumérica
-  password,
-
-  /// Biométrico (huella, face ID, etc.)
-  biometric,
-
-  /// Sin bloqueo
-  none
-}
-
-/// Función para convertir string a enum
-LockScreenType? lockScreenTypeFromString(String? value) {
-  if (value == null) return null;
-
-  return LockScreenType.values.firstWhere(
-      (type) => type.name.toLowerCase() == value.toLowerCase(),
-      orElse: () => LockScreenType.none);
-}
-
-/// Función para convertir enum a string
-String? lockScreenTypeToString(LockScreenType? type) {
-  if (type == null) return null;
-  return type.name;
-}
-
 /// Representa información de seguridad de un dispositivo
 class SecurityInfo {
   /// Identificador único en la base de datos
@@ -45,9 +12,6 @@ class SecurityInfo {
   /// Indica si el bloqueo de pantalla está habilitado
   final bool lockScreenEnabled;
 
-  /// Tipo de bloqueo de pantalla
-  final LockScreenType? lockScreenType;
-
   /// Fecha y hora de creación
   final DateTime createdAt;
 
@@ -60,7 +24,6 @@ class SecurityInfo {
     required this.deviceId,
     required this.biometricAuthEnabled,
     required this.lockScreenEnabled,
-    this.lockScreenType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -71,7 +34,6 @@ class SecurityInfo {
     String? deviceId,
     bool? biometricAuthEnabled,
     bool? lockScreenEnabled,
-    LockScreenType? lockScreenType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -80,7 +42,6 @@ class SecurityInfo {
       deviceId: deviceId ?? this.deviceId,
       biometricAuthEnabled: biometricAuthEnabled ?? this.biometricAuthEnabled,
       lockScreenEnabled: lockScreenEnabled ?? this.lockScreenEnabled,
-      lockScreenType: lockScreenType ?? this.lockScreenType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -99,7 +60,7 @@ class SecurityInfo {
 
   @override
   String toString() {
-    return 'SecurityInfo(id: $id, deviceId: $deviceId, biometricAuthEnabled: $biometricAuthEnabled, lockScreenEnabled: $lockScreenEnabled, lockScreenType: $lockScreenType, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'SecurityInfo(id: $id, deviceId: $deviceId, biometricAuthEnabled: $biometricAuthEnabled, lockScreenEnabled: $lockScreenEnabled, createdAt: $createdAt, updatedAt: $updatedAt)';
   }
 
   @override
@@ -110,7 +71,6 @@ class SecurityInfo {
         other.deviceId == deviceId &&
         other.biometricAuthEnabled == biometricAuthEnabled &&
         other.lockScreenEnabled == lockScreenEnabled &&
-        other.lockScreenType == lockScreenType &&
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt;
   }
@@ -121,7 +81,6 @@ class SecurityInfo {
         deviceId.hashCode ^
         biometricAuthEnabled.hashCode ^
         lockScreenEnabled.hashCode ^
-        (lockScreenType?.hashCode ?? 0) ^
         createdAt.hashCode ^
         updatedAt.hashCode;
   }

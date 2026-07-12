@@ -38,7 +38,6 @@ class DBConstants {
   // Columnas de Device Security
   static const String biometricAuthEnabledColumn = 'biometric_auth_enabled';
   static const String lockScreenEnabledColumn = 'lock_screen_enabled';
-  static const String lockScreenTypeColumn = 'lock_screen_type';
 
   // Columnas de System Logs
   static const String logTypeColumn = 'log_type';

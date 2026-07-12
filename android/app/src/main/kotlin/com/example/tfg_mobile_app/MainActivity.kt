@@ -41,9 +41,9 @@ class MainActivity : FlutterActivity() {
                     val permissions = getPermissionsGroupStatus()
                     result.success(permissions)
                 }
-                "getIfScreenLocked" -> {
-                    val screenLockType = getScreenLockType()
-                    result.success(screenLockType)
+                "isScreenLocked" -> {
+                    val isLocked = isScreenLocked()
+                    result.success(isLocked)
                 }
                 else -> {
                     result.notImplemented()
@@ -52,8 +52,7 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    // Retrieve if the device has a some kind of screen lock or not
-    private fun getScreenLockType(): Boolean {
+    private fun isScreenLocked(): Boolean {
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         return when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {

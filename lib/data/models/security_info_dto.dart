@@ -9,7 +9,6 @@ class SecurityInfoDto {
   final String deviceId;
   final bool biometricAuthEnabled;
   final bool lockScreenEnabled;
-  final LockScreenType? lockScreenType;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,7 +17,6 @@ class SecurityInfoDto {
     required this.deviceId,
     required this.biometricAuthEnabled,
     required this.lockScreenEnabled,
-    this.lockScreenType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,7 +28,6 @@ class SecurityInfoDto {
       deviceId: json['device_id'],
       biometricAuthEnabled: json['biometric_auth_enabled'] as bool,
       lockScreenEnabled: json['lock_screen_enabled'] as bool,
-      lockScreenType: lockScreenTypeFromString(json['lock_screen_type']),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : DateTime.now(),
@@ -54,10 +51,6 @@ class SecurityInfoDto {
       data['id'] = id;
     }
 
-    if (lockScreenType != null) {
-      data['lock_screen_type'] = lockScreenTypeToString(lockScreenType);
-    }
-
     return data;
   }
 
@@ -68,7 +61,6 @@ class SecurityInfoDto {
       deviceId: deviceId,
       biometricAuthEnabled: biometricAuthEnabled,
       lockScreenEnabled: lockScreenEnabled,
-      lockScreenType: lockScreenType,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -81,7 +73,6 @@ class SecurityInfoDto {
       deviceId: securityInfo.deviceId,
       biometricAuthEnabled: securityInfo.biometricAuthEnabled,
       lockScreenEnabled: securityInfo.lockScreenEnabled,
-      lockScreenType: securityInfo.lockScreenType,
       createdAt: securityInfo.createdAt,
       updatedAt: securityInfo.updatedAt,
     );
